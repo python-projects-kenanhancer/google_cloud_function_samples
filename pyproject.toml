@@ -1,0 +1,101 @@
+[tool.poetry]
+name = "google-cloud-function-samples"
+version = "0.1.0"
+description = ""
+authors = ["kenan hancer <kenanhancer@hotmail.com>"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.scripts]
+setup = "scripts.setup:setup"
+cleanup = "scripts.cleanup:cleanup"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.10.1"
+pydantic-settings = "^2.6.1"
+pyyaml = "^6.0.2"
+google-cloud-secret-manager = "^2.21.1"
+google-cloud-storage = "^2.19.0"
+functions-framework = "^3.8.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+black = "^24.10.0"
+isort = "^5.13.2"
+pre-commit = "^4.0.1"
+ruff = "^0.8.1"
+pre-commit-hooks = "^5.0.0"
+pytest-xdist = "^3.6.1"
+
+[tool.pytest.ini_options]
+pythonpath = ["./src"]
+testpaths = ["tests"]
+norecursedirs = [".venv", ".pytest_cache", "__pycache__", ".vscode"]
+addopts = "-n 4"
+# env = []
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 130
+target-version = ["py311"]
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.mypy_cache
+  | \.pytest_cache
+  | __pycache__
+  | .vscode
+  | .idea
+  | build
+  | dist
+  | migrations
+  | .tox
+  | .eggs
+  | .git
+  | .hg
+  | .nox
+  | .venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 130
+known_first_party = ["src"]
+multi_line_output = 3
+include_trailing_comma = true
+split_on_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.ruff]
+line-length = 130
+
+# Move fixable configurations to lint section
+[tool.ruff.lint]
+select = ["F", "E", "W", "C90"]
+fixable = ["F401", "F841"]
+ignore = ["E501", "F403", "F405"]  # Disable line-length, F403 and F405 to ignore list
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "migrations",
+    "tests",
+    ".pytest_cache",
+    ".vscode",
+    ".idea",
+    ".tox",
+    ".eggs",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+]

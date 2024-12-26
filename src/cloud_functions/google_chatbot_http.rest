@@ -1,0 +1,42 @@
+###
+# Test 1: Happy path
+POST http://localhost:8080/google_chatbot_http
+Content-Type: application/json
+
+{
+    "message": {
+        "sender": {
+            "displayName": "John Doe",
+            "avatarUrl": "https://example.com/john_avatar.png"
+        }
+    }
+}
+
+
+###
+# Test 2: Another valid scenario
+POST http://localhost:8080/google_chatbot_http
+Content-Type: application/json
+
+{
+  "message": {
+    "sender": {
+      "displayName": "Alice Wonderland",
+      "avatarUrl": "http://example.com/alice_avatar.png"
+    }
+  }
+}
+
+###
+# Test 3: Missing or invalid fields (will raise validation errors, if typed)
+POST http://localhost:8080/google_chatbot_http
+Content-Type: application/json
+
+{
+  "message": {
+    "sender": {
+      "displayName": "UserWithoutAvatar"
+      // "avatarUrl" field intentionally missing or could be invalid
+    }
+  }
+}

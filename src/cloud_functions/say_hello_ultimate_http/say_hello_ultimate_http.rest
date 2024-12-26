@@ -1,0 +1,38 @@
+###
+# Test 1: Basic usage
+POST http://localhost:8080/say_hello_ultimate_http
+Content-Type: application/json
+
+{
+  "first_name": "Alice",
+  "last_name": "Wonderland"
+}
+
+###
+# Test 2: Another name
+POST http://localhost:8080/say_hello_ultimate_http
+Content-Type: application/json
+
+{
+  "first_name": "Bob",
+  "last_name": "Marley"
+}
+
+###
+# Test 3: Missing last_name (will likely raise a validation error if typed)
+POST http://localhost:8080/say_hello_ultimate_http
+Content-Type: application/json
+
+{
+  "first_name": "Charlie"
+}
+
+
+###
+# Test 4:
+GET http://localhost:8080/say_hello_ultimate_http?last_name=Marley
+Content-Type: application/json
+
+{
+  "first_name": "Charlie"
+}
