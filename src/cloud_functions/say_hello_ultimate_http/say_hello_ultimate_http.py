@@ -1,5 +1,7 @@
+import logging
+
 from config_loaders.decorators import inject_settings_from_gcp_storage_env
-from decorators import inject_typed_request
+from decorators import inject_logger, inject_typed_request
 from schemas import GreetingRequest, GreetingResponse, GreetingType, PersonName, SayHelloSettings, Settings
 
 from .greeting_service import GreetingService
@@ -11,6 +13,7 @@ from .greeting_strategy_factory import GreetingStrategyFactory
 
 
 @inject_typed_request()
+@inject_logger()
 @inject_settings_from_gcp_storage_env(
     param_name="say_hello_settings",
     bucket_name="app-config-boilerplate",
@@ -23,7 +26,9 @@ from .greeting_strategy_factory import GreetingStrategyFactory
     blob_name=".env",
     project_id="nexum-dev-364711",
 )
-def say_hello_ultimate_http(req: GreetingRequest, say_hello_settings: SayHelloSettings, settings: Settings):
+def say_hello_ultimate_http(
+    request: GreetingRequest, say_hello_settings: SayHelloSettings, settings: Settings, logger: logging.Logger
+):
 
     greeting_strategy_factory = GreetingStrategyFactory()
 
@@ -37,6 +42,7 @@ def say_hello_ultimate_http(req: GreetingRequest, say_hello_settings: SayHelloSe
         greeting_language=say_hello_settings.greeting_language,
     )
 
-    greeting_message = greeting_service.get_greeting_message(PersonName.model_validate(req))
+    greeting_message = greeting_service.get_greeting_message(PersonName.model_validate(request))
+    logger.info("Final greeting to user: %s", greeting_message)
 
     return GreetingResponse(message=greeting_message)

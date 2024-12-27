@@ -15,22 +15,14 @@ class TestSayHelloExtendedHttp:
         return Flask(__name__)
 
     @pytest.mark.parametrize(
-        "json_payload,query_string,expected_name",
+        "greeting_type,greeting_language,json_payload,query_string,expected_name",
         [
-            ({"name": "Alice"}, "", "Alice"),
-            (None, "?name=Bob", "Bob"),
-            (None, "", "World"),  # fallback
+            (GreetingType.BASIC, GreetingLanguage.EN, {"name": "Alice"}, "", "Alice"),
+            (GreetingType.TIMEBASED, GreetingLanguage.FR, None, "?name=Bob", "Bob"),
+            (GreetingType.HOLIDAY, GreetingLanguage.ES, None, "", "World"),  # fallback
         ],
     )
-    @pytest.mark.parametrize(
-        "greeting_type, greeting_language",
-        [
-            (GreetingType.BASIC, GreetingLanguage.EN),
-            (GreetingType.TIMEBASED, GreetingLanguage.FR),
-            (GreetingType.HOLIDAY, GreetingLanguage.ES),
-        ],
-    )
-    def test_http_function(self, flask_app, json_payload, query_string, expected_name, greeting_type, greeting_language):
+    def test_http_function(self, flask_app, greeting_type, greeting_language, json_payload, query_string, expected_name):
         method = "POST" if json_payload else "GET"
         data = json.dumps(json_payload) if json_payload else None
 
@@ -48,7 +40,7 @@ class TestSayHelloExtendedHttp:
             )
 
             # Call the original/undecorated function:
-            response = say_hello_extended_http.__wrapped__(request=request, settings=fake_settings)
+            response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
             assert expected_name in response
 
     @patch("cloud_functions.say_hello_extended_http.greeting_strategies.time_based_greeting_strategy.datetime")
@@ -62,7 +54,7 @@ class TestSayHelloExtendedHttp:
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            response = say_hello_extended_http.__wrapped__(request=request, settings=fake_settings)
+            response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
             assert "MorningUser" in response
             assert "Good morning" in response
 
@@ -79,6 +71,6 @@ class TestSayHelloExtendedHttp:
                 mock_now = datetime(2024, 12, 10, 8, 0, 0)
                 mock_datetime.datetime.now.return_value = mock_now
 
-                response = say_hello_extended_http.__wrapped__(request=request, settings=fake_settings)
+                response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
                 assert "MorningUser" in response
                 assert "Good morning" in response

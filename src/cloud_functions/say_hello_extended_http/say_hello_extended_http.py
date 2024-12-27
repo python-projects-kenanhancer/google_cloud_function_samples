@@ -4,29 +4,30 @@ import functions_framework
 from flask import Request
 
 from config_loaders import inject_settings_from_gcp_storage_env
-from decorators import inject_logger
-from schemas import GreetingType, SayHelloSettings, Settings
+from schemas import GreetingType, SayHelloSettings
 
 from .greeting_service import GreetingService
 from .greeting_strategies import BasicGreetingStrategy, HolidayGreetingStrategy, TimeBasedGreetingStrategy
 from .greeting_strategy_factory import GreetingStrategyFactory
 
+# ---------------------------------------------------------
+# Configure logging
+# ---------------------------------------------------------
+LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]: %(message)s"
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+# Create a named logger (instead of using the root logger)
+logger = logging.getLogger(__name__)
+
 
 @functions_framework.http
-@inject_logger()
 @inject_settings_from_gcp_storage_env(
     param_name="say_hello_settings",
     bucket_name="app-config-boilerplate",
     blob_name=".env.say_hello",
     project_id="nexum-dev-364711",
 )
-@inject_settings_from_gcp_storage_env(
-    param_name="settings",
-    bucket_name="app-config-boilerplate",
-    blob_name=".env",
-    project_id="nexum-dev-364711",
-)
-def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettings, settings: Settings, logger: logging.Logger):
+def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettings):
     request_json = request.get_json(silent=True)
     request_args = request.args
 

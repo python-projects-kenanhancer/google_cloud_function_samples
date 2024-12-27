@@ -26,4 +26,5 @@ class GreetingService:
 
         # 4) Combine with the user's name
         full_name = f"{person_name.first_name} {person_name.last_name}"
-        return f"Hello {full_name}!"
+
+        return f"{greeting_prefix} {full_name}!"
