@@ -1,5 +1,5 @@
 from config_loaders.decorators import inject_settings_from_gcp_storage_env
-from decorators import typed_request
+from decorators import inject_typed_request
 from schemas import GreetingRequest, GreetingResponse, GreetingType, PersonName, SayHelloSettings, Settings
 
 from .greeting_service import GreetingService
@@ -10,7 +10,7 @@ from .greeting_strategy_factory import GreetingStrategyFactory
 # Result Object Design Pattern
 
 
-@typed_request
+@inject_typed_request()
 @inject_settings_from_gcp_storage_env(
     param_name="say_hello_settings",
     bucket_name="app-config-boilerplate",

@@ -4,27 +4,29 @@ import functions_framework
 from flask import Request
 
 from config_loaders import inject_settings_from_gcp_storage_env
-from schemas import GreetingType, SayHelloSettings
+from decorators import inject_logger
+from schemas import GreetingType, SayHelloSettings, Settings
 
 from .greeting_service import GreetingService
 from .greeting_strategies import BasicGreetingStrategy, HolidayGreetingStrategy, TimeBasedGreetingStrategy
 from .greeting_strategy_factory import GreetingStrategyFactory
 
-# ---------------------------------------------------------
-# Configure logging
-# ---------------------------------------------------------
-LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]: %(message)s"
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
-# Create a named logger (instead of using the root logger)
-logger = logging.getLogger(__name__)
-
 
 @functions_framework.http
+@inject_logger()
 @inject_settings_from_gcp_storage_env(
-    bucket_name="app-config-boilerplate", blob_name=".env.say_hello", project_id="nexum-dev-364711"
+    param_name="say_hello_settings",
+    bucket_name="app-config-boilerplate",
+    blob_name=".env.say_hello",
+    project_id="nexum-dev-364711",
 )
-def say_hello_extended_http(request: Request, settings: SayHelloSettings):
+@inject_settings_from_gcp_storage_env(
+    param_name="settings",
+    bucket_name="app-config-boilerplate",
+    blob_name=".env",
+    project_id="nexum-dev-364711",
+)
+def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettings, settings: Settings, logger: logging.Logger):
     request_json = request.get_json(silent=True)
     request_args = request.args
 
@@ -35,7 +37,7 @@ def say_hello_extended_http(request: Request, settings: SayHelloSettings):
         name = request_args["name"]
         logger.info("Name found in query params: %s", name)
     else:
-        name = settings.default_name
+        name = say_hello_settings.default_name
         logger.info("Name not provided, using default: %s", name)
 
     greeting_strategy_factory = GreetingStrategyFactory.default()
@@ -46,8 +48,8 @@ def say_hello_extended_http(request: Request, settings: SayHelloSettings):
 
     greeting_service = GreetingService(
         greeting_strategy_factory=greeting_strategy_factory,
-        greeting_type=settings.greeting_type,
-        greeting_language=settings.greeting_language,
+        greeting_type=say_hello_settings.greeting_type,
+        greeting_language=say_hello_settings.greeting_language,
     )
 
     greeting_message = greeting_service.get_greeting_message(name=name)
