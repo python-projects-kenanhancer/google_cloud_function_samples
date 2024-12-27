@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from .greeting_strategy import GreetingStrategy
 
@@ -7,7 +7,7 @@ class HolidayGreetingStrategy(GreetingStrategy):
     """Returns holiday-themed greetings in December, otherwise 'Hello'."""
 
     def get_greeting_prefix(self) -> str:
-        now = datetime.now()
+        now = datetime.datetime.now()
         # Very simplistic holiday logic:
         if now.month == 12 and now.day == 25:
             return "Merry Christmas"
