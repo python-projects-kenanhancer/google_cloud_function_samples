@@ -3,5 +3,5 @@ from enum import Enum
 
 class GreetingType(str, Enum):
     BASIC = "basic"
-    TIMEBASED = "timebased"
+    TIME_BASED = "time_based"
     HOLIDAY = "holiday"

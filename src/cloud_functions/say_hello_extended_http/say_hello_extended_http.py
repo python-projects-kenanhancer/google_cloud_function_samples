@@ -45,7 +45,7 @@ def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettin
 
     greeting_strategy_factory.register(GreetingType.BASIC, BasicGreetingStrategy)
     greeting_strategy_factory.register(GreetingType.HOLIDAY, HolidayGreetingStrategy)
-    greeting_strategy_factory.register(GreetingType.TIMEBASED, TimeBasedGreetingStrategy)
+    greeting_strategy_factory.register(GreetingType.TIME_BASED, TimeBasedGreetingStrategy)
 
     greeting_service = GreetingService(
         greeting_strategy_factory=greeting_strategy_factory,

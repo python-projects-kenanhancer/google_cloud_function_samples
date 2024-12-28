@@ -38,11 +38,11 @@ class TestGreetingService:
 
         greeting_strategy_factory = GreetingStrategyFactory()
 
-        greeting_strategy_factory.register(GreetingType.TIMEBASED, TimeBasedGreetingStrategy)
+        greeting_strategy_factory.register(GreetingType.TIME_BASED, TimeBasedGreetingStrategy)
 
         greeting_service = GreetingService(
             greeting_strategy_factory=greeting_strategy_factory,
-            greeting_type=GreetingType.TIMEBASED,
+            greeting_type=GreetingType.TIME_BASED,
             greeting_language=GreetingLanguage.FR,
         )
 

@@ -18,9 +18,9 @@ class TestSayHelloUltimateHttp:
         [
             (GreetingType.BASIC, GreetingLanguage.EN, "John", "Doe", ["Hello", "John Doe"]),
             (GreetingType.HOLIDAY, GreetingLanguage.EN, "Alice", "Smith", ["Happy Holidays", "Alice Smith"]),
-            # For TIMEBASED, you might expect different results (e.g., "Good morning" / "Good afternoon"),
+            # For TIME_BASED, you might expect different results (e.g., "Good morning" / "Good afternoon"),
             # so here we just check that the message contains "Good".
-            (GreetingType.TIMEBASED, GreetingLanguage.EN, "Bob", "Marley", ["Good", "Bob Marley"]),
+            (GreetingType.TIME_BASED, GreetingLanguage.EN, "Bob", "Marley", ["Good", "Bob Marley"]),
         ],
     )
     def test_say_hello_ultimate_http(self, flask_app, greeting_type, greeting_language, first_name, last_name, expected_keywords):
@@ -60,7 +60,7 @@ class TestSayHelloUltimateHttp:
             greeting_request = GreetingRequest(first_name="John", last_name="Doe")
             fake_settings = SayHelloSettings(
                 default_name="World",
-                greeting_type=GreetingType.TIMEBASED,
+                greeting_type=GreetingType.TIME_BASED,
                 greeting_language=GreetingLanguage.EN,
             )
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
@@ -76,7 +76,7 @@ class TestSayHelloUltimateHttp:
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
             fake_settings = SayHelloSettings(
                 default_name="World",
-                greeting_type=GreetingType.TIMEBASED,
+                greeting_type=GreetingType.TIME_BASED,
                 greeting_language=GreetingLanguage.EN,
             )
             with patch(

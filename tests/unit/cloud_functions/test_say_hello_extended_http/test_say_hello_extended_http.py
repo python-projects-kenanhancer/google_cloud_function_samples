@@ -18,7 +18,7 @@ class TestSayHelloExtendedHttp:
         "greeting_type,greeting_language,json_payload,query_string,expected_name",
         [
             (GreetingType.BASIC, GreetingLanguage.EN, {"name": "Alice"}, "", "Alice"),
-            (GreetingType.TIMEBASED, GreetingLanguage.FR, None, "?name=Bob", "Bob"),
+            (GreetingType.TIME_BASED, GreetingLanguage.FR, None, "?name=Bob", "Bob"),
             (GreetingType.HOLIDAY, GreetingLanguage.ES, None, "", "World"),  # fallback
         ],
     )
@@ -48,7 +48,7 @@ class TestSayHelloExtendedHttp:
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
             fake_settings = SayHelloSettings(
                 default_name="World",
-                greeting_type=GreetingType.TIMEBASED,
+                greeting_type=GreetingType.TIME_BASED,
                 greeting_language=GreetingLanguage.EN,
             )
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
@@ -62,7 +62,7 @@ class TestSayHelloExtendedHttp:
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
             fake_settings = SayHelloSettings(
                 default_name="World",
-                greeting_type=GreetingType.TIMEBASED,
+                greeting_type=GreetingType.TIME_BASED,
                 greeting_language=GreetingLanguage.EN,
             )
             with patch(
