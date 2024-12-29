@@ -12,7 +12,7 @@ from config_loaders import (
     JsonConfigLoaderArgs,
     YamlConfigLoaderArgs,
 )
-from schemas import Settings
+from models import Settings
 from tests.unit.settings.unified_settings import UnifiedSettings
 
 
@@ -159,4 +159,5 @@ class TestSettingsWithConfigLoadersAdvanced:
 
                 assert actual_settings_from_env_gcp_storage_value == expected_value
                 assert actual_settings_from_json_gcp_storage_value == expected_value
+                assert actual_settings_from_yaml_gcp_storage_value == expected_value
                 assert actual_settings_from_yaml_gcp_storage_value == expected_value

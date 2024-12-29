@@ -1,6 +1,6 @@
 import functions_framework
 
-from schemas import (
+from models import (
     Card,
     CardHeader,
     CardSection,

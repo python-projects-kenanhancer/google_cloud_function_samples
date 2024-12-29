@@ -1,7 +1,6 @@
 import pytest
 
-from cloud_functions import say_hello_advanced_http
-from schemas import GreetingRequest, GreetingResponse
+from cloud_functions.say_hello_advanced_http import GreetingRequest, GreetingResponse, say_hello_advanced_http_handler
 
 
 class TestSayHelloAdvancedHttp:
@@ -16,7 +15,7 @@ class TestSayHelloAdvancedHttp:
     def test_say_hello_advanced_http(self, first_name, last_name, expected_message):
         request_obj = GreetingRequest(first_name=first_name, last_name=last_name)
 
-        response_obj = say_hello_advanced_http(request_obj)
+        response_obj = say_hello_advanced_http_handler(request_obj)
 
         assert isinstance(response_obj, GreetingResponse)
         assert response_obj.message == expected_message

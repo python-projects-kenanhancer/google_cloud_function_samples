@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from schemas import Settings
+from models import Settings
 
 
 @dataclass

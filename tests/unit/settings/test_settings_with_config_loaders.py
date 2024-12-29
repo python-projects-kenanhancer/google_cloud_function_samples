@@ -12,7 +12,7 @@ from config_loaders import (
     JsonConfigLoaderArgs,
     YamlConfigLoaderArgs,
 )
-from schemas import Settings
+from models import Settings
 from tests.unit.settings.unified_settings import UnifiedSettings
 
 
@@ -23,7 +23,7 @@ class TestSettingsWithConfigLoaders:
         return request.param
 
     @pytest.fixture
-    def settings(self, env_suffix):
+    def settings(self, env_suffix) -> UnifiedSettings:
 
         unified_settings = UnifiedSettings()
 
@@ -156,4 +156,5 @@ class TestSettingsWithConfigLoaders:
 
                 assert actual_settings_from_env_gcp_storage_value == expected_value
                 assert actual_settings_from_json_gcp_storage_value == expected_value
+                assert actual_settings_from_yaml_gcp_storage_value == expected_value
                 assert actual_settings_from_yaml_gcp_storage_value == expected_value

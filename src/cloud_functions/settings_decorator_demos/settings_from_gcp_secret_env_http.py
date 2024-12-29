@@ -2,7 +2,7 @@ import functions_framework
 from flask import Request, Response, make_response
 
 from config_loaders import inject_settings_from_gcp_secret_env
-from schemas import Settings
+from models import Settings
 
 
 @functions_framework.http
