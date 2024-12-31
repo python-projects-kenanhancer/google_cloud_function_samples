@@ -3,17 +3,8 @@ import logging
 import functions_framework
 from flask import Request
 
-from config_loaders import inject_settings_from_gcp_storage_env
-from domain.greeting import (
-    BasicGreetingStrategy,
-    GreetingService,
-    GreetingStrategyFactory,
-    GreetingType,
-    HolidayGreetingStrategy,
-    PersonName,
-    SayHelloSettings,
-    TimeBasedGreetingStrategy,
-)
+from application import GreetingAppRequest, SayHelloUseCase
+from infrastructure import SayHelloSettings, inject_settings_from_gcp_storage_env
 
 # ---------------------------------------------------------
 # Configure logging
@@ -46,19 +37,10 @@ def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettin
         name = say_hello_settings.default_name
         logger.info("Name not provided, using default: %s", name)
 
-    greeting_strategy_factory = GreetingStrategyFactory.default()
+    say_hello_use_case = SayHelloUseCase(logger, say_hello_settings)
 
-    greeting_strategy_factory.register(GreetingType.BASIC, BasicGreetingStrategy)
-    greeting_strategy_factory.register(GreetingType.HOLIDAY, HolidayGreetingStrategy)
-    greeting_strategy_factory.register(GreetingType.TIME_BASED, TimeBasedGreetingStrategy)
+    request_app = GreetingAppRequest(first_name=name, last_name="")
 
-    greeting_service = GreetingService(
-        greeting_strategy_factory=greeting_strategy_factory,
-        greeting_type=say_hello_settings.greeting_type,
-        greeting_language=say_hello_settings.greeting_language,
-    )
+    greeting_message = say_hello_use_case.execute(request_app)
 
-    greeting_message = greeting_service.get_greeting_message(PersonName(first_name=name, last_name=""))
-    logger.info("Final greeting to user: %s", greeting_message)
-
-    return greeting_message
+    return greeting_message.message

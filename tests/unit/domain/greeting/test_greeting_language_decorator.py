@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from domain.greeting import GreetingLanguageDecorator, GreetingStrategy
+from domain import GreetingLanguageDecorator, GreetingStrategy
 
 
 class TestGreetingLanguageDecorator:

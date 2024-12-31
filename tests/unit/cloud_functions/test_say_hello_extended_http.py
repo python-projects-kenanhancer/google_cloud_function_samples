@@ -6,7 +6,8 @@ import pytest
 from flask import Flask, request
 
 from cloud_functions import say_hello_extended_http
-from domain.greeting import GreetingLanguage, GreetingType, SayHelloSettings
+from domain import GreetingLanguage, GreetingType
+from infrastructure import SayHelloSettings
 
 
 class TestSayHelloExtendedHttp:
@@ -40,7 +41,8 @@ class TestSayHelloExtendedHttp:
             )
 
             # Call the original/undecorated function:
-            response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+            response: str = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+            assert isinstance(response, str)
             assert expected_name in response
 
     @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
@@ -54,7 +56,8 @@ class TestSayHelloExtendedHttp:
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+            response: str = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+            assert isinstance(response, str)
             assert "MorningUser" in response
             assert "Good morning" in response
 
@@ -69,6 +72,7 @@ class TestSayHelloExtendedHttp:
                 mock_now = datetime(2024, 12, 10, 8, 0, 0)
                 mock_datetime.datetime.now.return_value = mock_now
 
-                response = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+                response: str = say_hello_extended_http.__wrapped__(request=request, say_hello_settings=fake_settings)
+                assert isinstance(response, str)
                 assert "MorningUser" in response
                 assert "Good morning" in response

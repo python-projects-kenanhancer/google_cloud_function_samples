@@ -1,8 +1,7 @@
 import functions_framework
 from flask import Request, Response, make_response
 
-from config_loaders import inject_settings_from_yaml_file
-from models import Settings
+from infrastructure import Settings, inject_settings_from_yaml_file
 
 
 @functions_framework.http

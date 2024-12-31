@@ -1,4 +1,4 @@
-from domain.greeting import BasicGreetingStrategy, GreetingStrategyFactory, GreetingType, HolidayGreetingStrategy
+from domain import BasicGreetingStrategy, GreetingStrategyFactory, GreetingType, HolidayGreetingStrategy
 
 
 class TestGreetingStrategyFactory:

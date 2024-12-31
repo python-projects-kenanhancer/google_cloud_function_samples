@@ -1,8 +1,7 @@
 import functions_framework
 from flask import Request, Response, make_response
 
-from config_loaders import inject_settings_from_gcp_storage_json
-from models import Settings
+from infrastructure import Settings, inject_settings_from_gcp_storage_json
 
 
 @functions_framework.http

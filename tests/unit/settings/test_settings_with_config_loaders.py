@@ -1,7 +1,6 @@
 import pytest
 
-from config_loaders import (
-    ConfigLoaderFactory,
+from infrastructure import (
     EnvConfigLoaderArgs,
     GcpSecretEnvConfigLoaderArgs,
     GcpSecretJsonConfigLoaderArgs,
@@ -10,9 +9,9 @@ from config_loaders import (
     GcpStorageJsonConfigLoaderArgs,
     GcpStorageYamlConfigLoaderArgs,
     JsonConfigLoaderArgs,
+    SettingsFactory,
     YamlConfigLoaderArgs,
 )
-from models import Settings
 from tests.unit.settings.unified_settings import UnifiedSettings
 
 
@@ -46,34 +45,28 @@ class TestSettingsWithConfigLoaders:
         bucket_name = "app-config-boilerplate"
         project_id = "nexum-dev-364711"
 
-        settings_from_env_file = Settings.load(ConfigLoaderFactory.get_loader(EnvConfigLoaderArgs(file_path=env_file)))
-        settings_from_json_file = Settings.load(ConfigLoaderFactory.get_loader(JsonConfigLoaderArgs(file_path=json_file)))
-        settings_from_yaml_file = Settings.load(ConfigLoaderFactory.get_loader(YamlConfigLoaderArgs(file_path=yaml_file)))
+        settings_from_env_file = SettingsFactory.load(EnvConfigLoaderArgs(file_path=env_file))
+        settings_from_json_file = SettingsFactory.load(JsonConfigLoaderArgs(file_path=json_file))
+        settings_from_yaml_file = SettingsFactory.load(YamlConfigLoaderArgs(file_path=yaml_file))
 
-        settings_from_env_gcp_secret = Settings.load(
-            ConfigLoaderFactory.get_loader(GcpSecretEnvConfigLoaderArgs(secret_name=env_gcp_secret_name, project_id=project_id))
+        settings_from_env_gcp_secret = SettingsFactory.load(
+            GcpSecretEnvConfigLoaderArgs(secret_name=env_gcp_secret_name, project_id=project_id)
         )
-        settings_from_json_gcp_secret = Settings.load(
-            ConfigLoaderFactory.get_loader(GcpSecretJsonConfigLoaderArgs(secret_name=json_gcp_secret_name, project_id=project_id))
+        settings_from_json_gcp_secret = SettingsFactory.load(
+            GcpSecretJsonConfigLoaderArgs(secret_name=json_gcp_secret_name, project_id=project_id)
         )
-        settings_from_yaml_gcp_secret = Settings.load(
-            ConfigLoaderFactory.get_loader(GcpSecretYamlConfigLoaderArgs(secret_name=yaml_gcp_secret_name, project_id=project_id))
+        settings_from_yaml_gcp_secret = SettingsFactory.load(
+            GcpSecretYamlConfigLoaderArgs(secret_name=yaml_gcp_secret_name, project_id=project_id)
         )
 
-        settings_from_env_gcp_storage = Settings.load(
-            ConfigLoaderFactory.get_loader(
-                GcpStorageEnvConfigLoaderArgs(bucket_name=bucket_name, blob_name=env_file, project_id=project_id)
-            )
+        settings_from_env_gcp_storage = SettingsFactory.load(
+            GcpStorageEnvConfigLoaderArgs(bucket_name=bucket_name, blob_name=env_file, project_id=project_id)
         )
-        settings_from_json_gcp_storage = Settings.load(
-            ConfigLoaderFactory.get_loader(
-                GcpStorageJsonConfigLoaderArgs(bucket_name=bucket_name, blob_name=json_file, project_id=project_id)
-            )
+        settings_from_json_gcp_storage = SettingsFactory.load(
+            GcpStorageJsonConfigLoaderArgs(bucket_name=bucket_name, blob_name=json_file, project_id=project_id)
         )
-        settings_from_yaml_gcp_storage = Settings.load(
-            ConfigLoaderFactory.get_loader(
-                GcpStorageYamlConfigLoaderArgs(bucket_name=bucket_name, blob_name=yaml_file, project_id=project_id)
-            )
+        settings_from_yaml_gcp_storage = SettingsFactory.load(
+            GcpStorageYamlConfigLoaderArgs(bucket_name=bucket_name, blob_name=yaml_file, project_id=project_id)
         )
 
         unified_settings.settings_from_env_file = settings_from_env_file

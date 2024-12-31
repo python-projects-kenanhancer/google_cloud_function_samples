@@ -1,0 +1,42 @@
+###
+# Test 1: Happy path
+POST http://localhost:8080/chat_http
+Content-Type: application/json
+
+{
+    "message": {
+        "sender": {
+            "display_name": "John Doe",
+            "avatar_url": "https://example.com/john_avatar.png"
+        }
+    }
+}
+
+
+###
+# Test 2: Another valid scenario
+POST http://localhost:8080/chat_http
+Content-Type: application/json
+
+{
+  "message": {
+    "sender": {
+      "display_name": "Alice Wonderland",
+      "avatar_url": "http://example.com/alice_avatar.png"
+    }
+  }
+}
+
+###
+# Test 3: Missing or invalid fields (will raise validation errors, if typed)
+POST http://localhost:8080/chat_http
+Content-Type: application/json
+
+{
+  "message": {
+    "sender": {
+      "display_name": "UserWithoutAvatar"
+      // "avatar_url" field intentionally missing or could be invalid
+    }
+  }
+}

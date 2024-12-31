@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from domain.greeting import TimeBasedGreetingStrategy
+from domain import TimeBasedGreetingStrategy
 
 
 class TestTimeBasedGreetingStrategy:

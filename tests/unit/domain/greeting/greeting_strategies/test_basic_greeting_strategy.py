@@ -1,4 +1,4 @@
-from domain.greeting import BasicGreetingStrategy
+from domain import BasicGreetingStrategy
 
 
 class TestBasicGreetingStrategy:

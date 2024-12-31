@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from domain.greeting import (
+from domain import (
     BasicGreetingStrategy,
     GreetingLanguage,
     GreetingService,

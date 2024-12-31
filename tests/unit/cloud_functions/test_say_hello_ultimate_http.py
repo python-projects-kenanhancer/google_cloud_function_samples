@@ -4,8 +4,9 @@ from unittest.mock import patch
 import pytest
 from flask import Flask
 
-from cloud_functions.say_hello_ultimate_http import GreetingRequest, GreetingResponse, say_hello_ultimate_http_handler
-from domain.greeting import GreetingLanguage, GreetingType, SayHelloSettings
+from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello_ultimate_http
+from domain import GreetingLanguage, GreetingType
+from infrastructure import SayHelloSettings
 
 
 class TestSayHelloUltimateHttp:
@@ -25,7 +26,7 @@ class TestSayHelloUltimateHttp:
     )
     def test_say_hello_ultimate_http(self, flask_app, greeting_type, greeting_language, first_name, last_name, expected_keywords):
         """
-        Tests the say_hello_ultimate_http_handler function with different greeting types.
+        Tests the say_hello_ultimate_http function with different greeting types.
         The test verifies that the returned greeting message contains expected keywords.
         """
 
@@ -35,7 +36,7 @@ class TestSayHelloUltimateHttp:
             data={"first_name": first_name, "last_name": last_name},
             content_type="application/json",
         ):
-            greeting_request = GreetingRequest(first_name=first_name, last_name=last_name)
+            greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
 
             # Mock settings
             fake_settings = SayHelloSettings(
@@ -45,19 +46,19 @@ class TestSayHelloUltimateHttp:
             )
 
             # Act: Call the function under test
-            response: GreetingResponse = say_hello_ultimate_http_handler.__wrapped__(
+            response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
                 request=greeting_request, say_hello_settings=fake_settings
             )
 
         # Assert: Check the result type and that the expected keywords are in the message
-        assert isinstance(response, GreetingResponse)
+        assert isinstance(response, GreetingHttpResponse)
         for keyword in expected_keywords:
             assert keyword in response.message, f"Expected '{keyword}' to be in greeting message"
 
     @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
     def test_http_function_timebased_morning(self, mock_datetime, flask_app):
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
-            greeting_request = GreetingRequest(first_name="John", last_name="Doe")
+            greeting_request = GreetingHttpRequest(first_name="John", last_name="Doe")
             fake_settings = SayHelloSettings(
                 default_name="World",
                 greeting_type=GreetingType.TIME_BASED,
@@ -66,9 +67,10 @@ class TestSayHelloUltimateHttp:
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            response: GreetingResponse = say_hello_ultimate_http_handler.__wrapped__(
+            response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
                 request=greeting_request, say_hello_settings=fake_settings
             )
+            assert isinstance(response, GreetingHttpResponse)
             assert "John Doe" in response.message
             assert "Good morning" in response.message
 
@@ -80,12 +82,13 @@ class TestSayHelloUltimateHttp:
                 greeting_language=GreetingLanguage.EN,
             )
             with patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime") as mock_datetime:
-                greeting_request = GreetingRequest(first_name="Alice", last_name="Smith")
+                greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
                 mock_now = datetime(2024, 12, 10, 8, 0, 0)
                 mock_datetime.datetime.now.return_value = mock_now
 
-                response: GreetingResponse = say_hello_ultimate_http_handler.__wrapped__(
+                response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
                     request=greeting_request, say_hello_settings=fake_settings
                 )
+                assert isinstance(response, GreetingHttpResponse)
                 assert "Alice Smith" in response.message
                 assert "Good morning" in response.message
