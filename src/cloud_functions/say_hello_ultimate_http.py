@@ -26,7 +26,7 @@ def say_hello_ultimate_http(
     request: GreetingHttpRequest, say_hello_settings: SayHelloSettings, settings: Settings, logger: logging.Logger
 ):
 
-    say_hello_use_case = SayHelloUseCase(logger, say_hello_settings)
+    say_hello_use_case = SayHelloUseCase(say_hello_settings)
 
     request_app = GreetingAppRequest.model_validate(request.to_dict())
 

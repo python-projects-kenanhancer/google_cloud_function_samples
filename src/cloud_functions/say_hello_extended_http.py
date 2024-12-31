@@ -37,7 +37,7 @@ def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettin
         name = say_hello_settings.default_name
         logger.info("Name not provided, using default: %s", name)
 
-    say_hello_use_case = SayHelloUseCase(logger, say_hello_settings)
+    say_hello_use_case = SayHelloUseCase(say_hello_settings)
 
     request_app = GreetingAppRequest(first_name=name, last_name="")
 

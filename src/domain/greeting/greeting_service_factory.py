@@ -11,7 +11,7 @@ from .models import (
 
 class GreetingServiceFactory:
 
-    def __init__(self, logger) -> None:
+    def __init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info("GreetingServiceFactory initialized with an empty registry.")
 
