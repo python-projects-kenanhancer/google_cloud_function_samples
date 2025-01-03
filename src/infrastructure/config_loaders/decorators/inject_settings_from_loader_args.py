@@ -1,4 +1,4 @@
-from typing import Any, Callable, Type, overload
+from typing import Any, Callable, overload
 
 from ..config_loader_args import (
     ConfigLoaderArgs,
@@ -12,15 +12,8 @@ from ..config_loader_args import (
     JsonConfigLoaderArgs,
     YamlConfigLoaderArgs,
 )
-from ..config_loader_factory import ConfigLoaderFactory
-from .base_inject_settings import TSettings, inject_settings
-
-
-def load_settings_from_config_loader(*, config_loader_args: ConfigLoaderArgs, SettingsClass: Type[TSettings]):
-    env_config_loader = ConfigLoaderFactory.get_loader(config_loader_args=config_loader_args)
-
-    raw_config = env_config_loader.load()
-    return SettingsClass(**raw_config)
+from .base_inject_settings import inject_settings
+from .load_settings_from_config_loader import load_settings_from_config_loader
 
 
 @overload
@@ -74,6 +67,12 @@ def inject_settings_from_loader_args(
 @overload
 def inject_settings_from_loader_args(
     config_loader_args: YamlConfigLoaderArgs, param_name: str = "settings"
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
+
+
+@overload
+def inject_settings_from_loader_args(
+    config_loader_args: ConfigLoaderArgs, param_name: str = "settings"
 ) -> Callable[[Callable[..., Any]], Callable[..., Any]]: ...
 
 

@@ -4,7 +4,7 @@ import functions_framework
 from flask import Request
 
 from application import GreetingAppRequest, SayHelloUseCase
-from infrastructure import SayHelloSettings, inject_settings_from_gcp_storage_env
+from infrastructure import SayHelloSettings, build_di_container
 
 # ---------------------------------------------------------
 # Configure logging
@@ -15,15 +15,14 @@ logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 # Create a named logger (instead of using the root logger)
 logger = logging.getLogger(__name__)
 
+injector = build_di_container()
+
 
 @functions_framework.http
-@inject_settings_from_gcp_storage_env(
-    param_name="say_hello_settings",
-    bucket_name="app-config-boilerplate",
-    blob_name=".env.say_hello",
-    project_id="nexum-dev-364711",
-)
-def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettings):
+def say_hello_extended_http(request: Request):
+
+    say_hello_settings: SayHelloSettings = injector.get(SayHelloSettings)
+    say_hello_use_case: SayHelloUseCase = injector.get(SayHelloUseCase)
     request_json = request.get_json(silent=True)
     request_args = request.args
 
@@ -36,8 +35,6 @@ def say_hello_extended_http(request: Request, say_hello_settings: SayHelloSettin
     else:
         name = say_hello_settings.default_name
         logger.info("Name not provided, using default: %s", name)
-
-    say_hello_use_case = SayHelloUseCase(say_hello_settings)
 
     request_app = GreetingAppRequest(first_name=name, last_name="")
 

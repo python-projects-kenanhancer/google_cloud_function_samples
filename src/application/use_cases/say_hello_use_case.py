@@ -1,8 +1,10 @@
 import logging
 
+from injector import inject
+
 # Domain models and services
 from domain import (
-    GreetingServiceFactory,
+    GreetingService,
     PersonName,
 )
 from infrastructure import SayHelloSettings
@@ -25,23 +27,21 @@ class SayHelloUseCase:
     it just orchestrates domain logic using domain models/services.
     """
 
-    def __init__(self, say_hello_settings: SayHelloSettings):
+    @inject
+    def __init__(self, say_hello_settings: SayHelloSettings, greeting_service: GreetingService):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.say_hello_settings = say_hello_settings
+        self.greeting_service = greeting_service
 
     def execute(self, request_app: GreetingAppRequest) -> GreetingAppResponse:
-        # 1) Build the domain-level GreetingService
-        greeting_service = GreetingServiceFactory().create(
-            self.say_hello_settings.greeting_type, self.say_hello_settings.greeting_language
-        )
 
-        # 2) Convert request to a domain model
         person_name = PersonName.model_validate(request_app.to_dict())
 
-        # 3) Execute domain logic
-        greeting_message = greeting_service.get_greeting_message(person_name)
+        greeting_type = self.say_hello_settings.greeting_type
+        greeting_language = self.say_hello_settings.greeting_language
 
-        # 4) Log + create a response DTO
+        greeting_message = self.greeting_service.get_greeting_message(person_name, greeting_type, greeting_language)
+
         self.logger.info("Final greeting to user: %s", greeting_message)
 
         return GreetingAppResponse(message=greeting_message)
