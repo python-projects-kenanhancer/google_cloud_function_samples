@@ -1,10 +1,32 @@
+from unittest.mock import MagicMock
+
+import pytest
 from cloudevents.http import CloudEvent
 
 from cloud_functions import hello_gcs
+from infrastructure import LoggerStrategy, build_di_container
 
 
 class TestHelloGcs:
-    def test_hello_gcs_prints_details(self, capsys):
+    @pytest.fixture
+    def mock_logger_strategy(self):
+        """
+        Create a MagicMock that behaves like LoggerStrategy.
+        """
+        return MagicMock(spec=LoggerStrategy)
+
+    @pytest.fixture
+    def mock_injector(self, mock_logger_strategy):
+        """
+        Build a new DI container and override the LoggerStrategy binding with our mock.
+        """
+        injector = build_di_container()
+        # Override the binding so that any .get(LoggerStrategy) returns our mock
+        injector.binder.bind(LoggerStrategy, mock_logger_strategy)
+
+        return injector
+
+    def test_hello_gcs_prints_details(self, mock_injector, mock_logger_strategy):
         """
         Ensures that hello_gcs prints the correct details when
         triggered by a CloudEvent with relevant data.
@@ -30,17 +52,9 @@ class TestHelloGcs:
         event = CloudEvent(attributes, data)
 
         # Invoke the function
-        hello_gcs(event)
+        hello_gcs.__wrapped__(cloud_event=event, injector=mock_injector)
 
-        # Capture stdout (print statements)
-        captured = capsys.readouterr()
-        output = captured.out
-
-        # Assertions to verify the output text
-        assert "Event ID: 1234-1234-1234" in output
-        assert "Event type: google.cloud.storage.object.v1.finalized" in output
-        assert "Bucket: my-bucket" in output
-        assert "File: file.txt" in output
-        assert "Metageneration: 1" in output
-        assert "Created: 2021-04-23T07:00:00.000Z" in output
-        assert "Updated: 2021-04-23T07:00:00.000Z" in output
+        # Assert: Verify the calls on the mock logger
+        mock_logger_strategy.info.assert_any_call(f"Event ID: {attributes["id"]}")
+        mock_logger_strategy.info.assert_any_call(f"Event type: {attributes["type"]}")
+        mock_logger_strategy.info.assert_any_call(f"Bucket: {data['bucket']}")

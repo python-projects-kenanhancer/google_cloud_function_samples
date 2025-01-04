@@ -1,12 +1,32 @@
 import base64
+from unittest.mock import MagicMock
 
 import pytest
 from cloudevents.http import CloudEvent
 
 from cloud_functions import hello_basic_pubsub
+from infrastructure import LoggerStrategy, build_di_container
 
 
 class TestHelloBasicPubsub:
+    @pytest.fixture
+    def mock_logger_strategy(self):
+        """
+        Create a MagicMock that behaves like LoggerStrategy.
+        """
+        return MagicMock(spec=LoggerStrategy)
+
+    @pytest.fixture
+    def mock_injector(self, mock_logger_strategy):
+        """
+        Build a new DI container and override the LoggerStrategy binding with our mock.
+        """
+        injector = build_di_container()
+        # Override the binding so that any .get(LoggerStrategy) returns our mock
+        injector.binder.bind(LoggerStrategy, mock_logger_strategy)
+
+        return injector
+
     @pytest.mark.parametrize(
         "attributes, data, expected_id, expected_message",
         [
@@ -67,7 +87,7 @@ class TestHelloBasicPubsub:
             ),
         ],
     )
-    def test_hello_pubsub(self, capsys, attributes, data, expected_id, expected_message):
+    def test_hello_pubsub(self, mock_injector, mock_logger_strategy, attributes, data, expected_id, expected_message):
         """
         Tests the hello_pubsub CloudEvent function by injecting various
         payloads and asserting the logged output matches expectations.
@@ -76,15 +96,9 @@ class TestHelloBasicPubsub:
         event = CloudEvent(attributes, data)
 
         # Call the function under test
-        hello_basic_pubsub(event)
+        hello_basic_pubsub.__wrapped__(cloud_event=event, injector=mock_injector)
 
-        # Capture the logs printed to stdout
-        captured = capsys.readouterr()
-        output = captured.out
-
-        # Assert the expected logs are present
-        assert f"CloudEvent ID: {expected_id}" in output
-        assert f"Pub/Sub Message: {expected_message}" in output
-
-        # Optional: You could also test other log lines, e.g.:
-        # assert f"CloudEvent Source: {attributes['source']}" in output
+        # Assert: Verify the calls on the mock logger
+        mock_logger_strategy.info.assert_any_call(f"CloudEvent ID: {attributes["id"]}")
+        mock_logger_strategy.info.assert_any_call(f"CloudEvent Source: {attributes["source"]}")
+        mock_logger_strategy.info.assert_any_call(f"Pub/Sub Message: {expected_message}")

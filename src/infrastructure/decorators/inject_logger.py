@@ -55,7 +55,10 @@ def inject_logger(logger_name: str | None = None):
             # 2) Inject a logger if not provided
             if "logger" not in kwargs:
                 name = logger_name or func.__module__  # e.g. 'my_package.my_module'
-                kwargs["logger"] = logging.getLogger(name)
+                logger = logging.getLogger(name)
+                logger.propagate = False  # stops logs from traveling to the root logger
+
+                kwargs["logger"] = logger
 
             return func(*args, **kwargs)
 

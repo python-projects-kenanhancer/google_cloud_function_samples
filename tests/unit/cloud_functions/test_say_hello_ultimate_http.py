@@ -1,18 +1,36 @@
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
 
 from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello_ultimate_http
 from domain import GreetingLanguage, GreetingType
-from infrastructure import FakeSayHelloSettingsModule, build_di_container
+from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container
 
 
 class TestSayHelloUltimateHttp:
     @pytest.fixture
     def flask_app(self):
         return Flask(__name__)
+
+    @pytest.fixture
+    def mock_logger_strategy(self):
+        """
+        Create a MagicMock that behaves like LoggerStrategy.
+        """
+        return MagicMock(spec=LoggerStrategy)
+
+    @pytest.fixture
+    def mock_injector(self, mock_logger_strategy):
+        """
+        Build a new DI container and override the LoggerStrategy binding with our mock.
+        """
+        injector = build_di_container()
+        # Override the binding so that any .get(LoggerStrategy) returns our mock
+        injector.binder.bind(LoggerStrategy, mock_logger_strategy)
+
+        return injector
 
     @pytest.mark.parametrize(
         "greeting_type, greeting_language, first_name, last_name, mock_now, datetime_patch, expected_keywords",
@@ -38,7 +56,6 @@ class TestSayHelloUltimateHttp:
             ),
         ],
     )
-    @patch("cloud_functions.say_hello_ultimate_http.injector")
     def test_say_hello_ultimate_http(
         self,
         mock_injector,
@@ -52,12 +69,10 @@ class TestSayHelloUltimateHttp:
         expected_keywords,
     ):
 
-        # 1. Create a new test container or mock
-        test_injector = build_di_container(
-            [FakeSayHelloSettingsModule(greeting_type=greeting_type, greeting_language=greeting_language)]
+        mock_injector.binder.bind(
+            SayHelloSettings,
+            SayHelloSettings(default_name="World", greeting_type=greeting_type, greeting_language=greeting_language),
         )
-        # 2. Patch the global injector reference
-        mock_injector.get.side_effect = test_injector.get
 
         with flask_app.test_request_context(
             "/",
@@ -69,11 +84,15 @@ class TestSayHelloUltimateHttp:
                 with patch(datetime_patch) as mock_datetime:
                     mock_datetime.datetime.now.return_value = mock_now
                     greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                    response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
+                    response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
+                        request=greeting_request, injector=mock_injector
+                    )
             else:
                 # No patch needed for this scenario
                 greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
+                response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
+                    request=greeting_request, injector=mock_injector
+                )
 
         # Assert: Check the result type and that the expected keywords are in the message
         assert isinstance(response, GreetingHttpResponse)
@@ -90,9 +109,10 @@ class TestSayHelloUltimateHttp:
             greeting_request = GreetingHttpRequest(first_name="John", last_name="Doe")
 
             response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
-            assert isinstance(response, GreetingHttpResponse)
-            assert "John Doe" in response.message
-            assert "Good morning" in response.message
+
+        assert isinstance(response, GreetingHttpResponse)
+        assert "John Doe" in response.message
+        assert "Good morning" in response.message
 
     def test_http_function_timebased_morning_v2(self, flask_app):
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
@@ -105,6 +125,7 @@ class TestSayHelloUltimateHttp:
                 greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
 
                 response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
-                assert isinstance(response, GreetingHttpResponse)
-                assert "Alice Smith" in response.message
-                assert "Good morning" in response.message
+
+        assert isinstance(response, GreetingHttpResponse)
+        assert "Alice Smith" in response.message
+        assert "Good morning" in response.message

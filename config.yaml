@@ -37,8 +37,17 @@ cdt_to_nexum:
   airflow_home: $PWD
   gcp_project: ""
   google_application_credentials: $HOME/.config/gcloud/application_default_credentials.json
-  cdt_dataset: cdt_to_nexum
+  cdt_dataset: cdt_ovo_to_nexum
   google_cloud_project: nexum-dev
   no_proxy: "*"
   dataset_output_env: $(git rev-parse --abbrev-ref HEAD)
   inttest_dset: integration_test
+
+datadog:
+  service: ovo_cdt_to_nexum
+  environment: dev
+  project_id: nexum-dev-364711
+  repo_name: cdt_dags
+  team: cdt
+  log_level: info
+  logger_name: info

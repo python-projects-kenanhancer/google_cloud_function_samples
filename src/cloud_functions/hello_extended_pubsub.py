@@ -1,21 +1,17 @@
 import base64
-import logging
 
 import functions_framework
 from cloudevents.http import CloudEvent
+from injector import Injector
 
-# ---------------------------------------------------------
-# Configure logging
-# ---------------------------------------------------------
-LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]: %(message)s"
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
-# Create a named logger (instead of using the root logger)
-logger = logging.getLogger(__name__)
+from infrastructure import LoggerStrategy, build_di_container, inject_injector
 
 
 @functions_framework.cloud_event
-def hello_extended_pubsub(cloud_event: CloudEvent):
+@inject_injector(build_di_container())
+def hello_extended_pubsub(cloud_event: CloudEvent, injector: Injector):
+    logger = injector.get(LoggerStrategy)
+
     data = cloud_event.data  # The event's data
 
     # Extract the base64-encoded message, if present

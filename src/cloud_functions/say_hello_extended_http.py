@@ -1,26 +1,16 @@
-import logging
-
 import functions_framework
 from flask import Request
+from injector import Injector
 
 from application import GreetingAppRequest, SayHelloUseCase
-from infrastructure import SayHelloSettings, build_di_container
-
-# ---------------------------------------------------------
-# Configure logging
-# ---------------------------------------------------------
-LOG_FORMAT = "%(asctime)s %(name)s [%(levelname)s]: %(message)s"
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
-# Create a named logger (instead of using the root logger)
-logger = logging.getLogger(__name__)
-
-injector = build_di_container()
+from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container, inject_injector
 
 
 @functions_framework.http
-def say_hello_extended_http(request: Request):
+@inject_injector(build_di_container())
+def say_hello_extended_http(request: Request, injector: Injector):
 
+    logger = injector.get(LoggerStrategy)
     say_hello_settings: SayHelloSettings = injector.get(SayHelloSettings)
     say_hello_use_case: SayHelloUseCase = injector.get(SayHelloUseCase)
     request_json = request.get_json(silent=True)
@@ -39,5 +29,7 @@ def say_hello_extended_http(request: Request):
     request_app = GreetingAppRequest(first_name=name, last_name="")
 
     greeting_message = say_hello_use_case.execute(request_app)
+
+    logger.info(greeting_message.message)
 
     return greeting_message.message

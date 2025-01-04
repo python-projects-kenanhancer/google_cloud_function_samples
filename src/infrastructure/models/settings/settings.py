@@ -5,6 +5,7 @@ from . import (
     AirflowInitSettings,
     BackendDBSettings,
     CdtToNexumSettings,
+    DatadogSettings,
     Environment,
     FeatureFlagsSettings,
     MetaDatabaseSettings,
@@ -20,3 +21,4 @@ class Settings(BaseModel):
     airflow_init: AirflowInitSettings
     airflow_core: AirflowCoreSettings
     cdt_to_nexum: CdtToNexumSettings
+    datadog: DatadogSettings
