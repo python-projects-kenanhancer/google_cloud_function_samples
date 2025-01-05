@@ -87,6 +87,7 @@ class TestSayHelloUltimateHttp:
                     response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
                         request=greeting_request, injector=mock_injector
                     )
+                    # say_hello_use_case: SayHelloUseCase, logger: LoggerStrategy, injector: Injector
             else:
                 # No patch needed for this scenario
                 greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)

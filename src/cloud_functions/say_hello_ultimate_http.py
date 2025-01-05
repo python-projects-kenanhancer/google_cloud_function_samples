@@ -2,19 +2,30 @@ from injector import Injector
 
 from application import GreetingAppRequest, SayHelloUseCase
 from cloud_functions.dtos import GreetingHttpRequest, GreetingHttpResponse
-from infrastructure import LoggerStrategy, build_di_container, inject_injector, inject_typed_request
+from infrastructure import LoggerStrategy, SayHelloSettings, Settings, build_di_container, inject_dependency, inject_typed_request
 
 # Parameter Object Design Pattern
 # Result Object Design Pattern
 
 
 @inject_typed_request()
-@inject_injector(build_di_container())
-def say_hello_ultimate_http(request: GreetingHttpRequest, injector: Injector):
+@inject_dependency(build_di_container())
+def say_hello_ultimate_http(
+    request: GreetingHttpRequest,
+    say_hello_use_case: SayHelloUseCase,
+    logger: LoggerStrategy,
+    injector: Injector,
+    settings: Settings,
+    say_hello_settings: SayHelloSettings,
+):
 
-    logger = injector.get(LoggerStrategy)
+    settings_v2 = injector.get(Settings)
 
-    say_hello_use_case: SayHelloUseCase = injector.get(SayHelloUseCase)
+    say_hello_settings_v2 = injector.get(SayHelloSettings)
+
+    print(settings == settings_v2)
+
+    print(say_hello_settings == say_hello_settings_v2)
 
     request_app = GreetingAppRequest.model_validate(request.to_dict())
 

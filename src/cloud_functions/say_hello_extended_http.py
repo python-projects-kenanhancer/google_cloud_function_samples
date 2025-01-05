@@ -1,18 +1,16 @@
 import functions_framework
 from flask import Request
-from injector import Injector
 
 from application import GreetingAppRequest, SayHelloUseCase
-from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container, inject_injector
+from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container, inject_dependency
 
 
 @functions_framework.http
-@inject_injector(build_di_container())
-def say_hello_extended_http(request: Request, injector: Injector):
+@inject_dependency(build_di_container())
+def say_hello_extended_http(
+    request: Request, say_hello_settings: SayHelloSettings, say_hello_use_case: SayHelloUseCase, logger: LoggerStrategy
+):
 
-    logger = injector.get(LoggerStrategy)
-    say_hello_settings: SayHelloSettings = injector.get(SayHelloSettings)
-    say_hello_use_case: SayHelloUseCase = injector.get(SayHelloUseCase)
     request_json = request.get_json(silent=True)
     request_args = request.args
 

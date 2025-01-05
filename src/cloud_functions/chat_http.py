@@ -6,11 +6,11 @@ from cloud_functions.dtos import (
     ChatHttpRequest,
     ChatHttpResponse,
 )
-from infrastructure import LoggerStrategy, build_di_container, inject_injector
+from infrastructure import LoggerStrategy, build_di_container, inject_dependency
 
 
 @functions_framework.typed
-@inject_injector(build_di_container())
+@inject_dependency(build_di_container())
 def chat_http(request: ChatHttpRequest, injector: Injector) -> ChatHttpResponse:
 
     logger = injector.get(LoggerStrategy)

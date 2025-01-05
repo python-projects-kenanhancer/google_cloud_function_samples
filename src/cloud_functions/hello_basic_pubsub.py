@@ -4,11 +4,11 @@ import functions_framework
 from cloudevents.http import CloudEvent
 from injector import Injector
 
-from infrastructure import LoggerStrategy, build_di_container, inject_injector
+from infrastructure import LoggerStrategy, build_di_container, inject_dependency
 
 
 @functions_framework.cloud_event
-@inject_injector(build_di_container())
+@inject_dependency(build_di_container())
 def hello_basic_pubsub(cloud_event: CloudEvent, injector: Injector):
     logger = injector.get(LoggerStrategy)
 

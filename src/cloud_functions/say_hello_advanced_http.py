@@ -2,14 +2,14 @@ import functions_framework
 from injector import Injector
 
 from cloud_functions.dtos import GreetingHttpRequest, GreetingHttpResponse
-from infrastructure import LoggerStrategy, build_di_container, inject_injector
+from infrastructure import LoggerStrategy, build_di_container, inject_dependency
 
 # Parameter Object Design Pattern
 # Result Object Design Pattern
 
 
 @functions_framework.typed
-@inject_injector(build_di_container())
+@inject_dependency(build_di_container())
 def say_hello_advanced_http(req: GreetingHttpRequest, injector: Injector):
 
     logger = injector.get(LoggerStrategy)
