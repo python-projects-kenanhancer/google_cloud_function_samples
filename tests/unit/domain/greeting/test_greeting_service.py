@@ -6,11 +6,11 @@ from injector import Injector
 
 from domain import (
     GreetingLanguage,
-    GreetingModule,
     GreetingService,
     GreetingType,
     PersonName,
 )
+from infrastructure import GreetingModule
 
 
 class TestGreetingService:

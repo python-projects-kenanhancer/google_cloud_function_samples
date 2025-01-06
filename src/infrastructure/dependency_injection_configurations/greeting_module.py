@@ -4,10 +4,7 @@ from injector import (
     singleton,
 )
 
-from .greeting_strategies import BasicGreetingStrategy, HolidayGreetingStrategy, TimeBasedGreetingStrategy
-from .models import (
-    GreetingType,
-)
+from domain import BasicGreetingStrategy, GreetingType, HolidayGreetingStrategy, TimeBasedGreetingStrategy
 
 
 class GreetingModule(Module):
