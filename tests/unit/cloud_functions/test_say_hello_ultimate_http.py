@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-from flask import Flask
+from flask import Flask, request
 
 from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello_ultimate_http
 from domain import GreetingLanguage, GreetingType
@@ -59,7 +59,6 @@ class TestSayHelloUltimateHttp:
     def test_say_hello_ultimate_http(
         self,
         mock_injector,
-        flask_app,
         greeting_type,
         greeting_language,
         first_name,
@@ -74,26 +73,15 @@ class TestSayHelloUltimateHttp:
             SayHelloSettings(default_name="World", greeting_type=greeting_type, greeting_language=greeting_language),
         )
 
-        with flask_app.test_request_context(
-            "/",
-            method="POST",
-            data={"first_name": first_name, "last_name": last_name},
-            content_type="application/json",
-        ):
-            if datetime_patch:
-                with patch(datetime_patch) as mock_datetime:
-                    mock_datetime.datetime.now.return_value = mock_now
-                    greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                    response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
-                        request=greeting_request, injector=mock_injector
-                    )
-                    # say_hello_use_case: SayHelloUseCase, logger: LoggerStrategy, injector: Injector
-            else:
-                # No patch needed for this scenario
+        if datetime_patch:
+            with patch(datetime_patch) as mock_datetime:
+                mock_datetime.datetime.now.return_value = mock_now
                 greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(
-                    request=greeting_request, injector=mock_injector
-                )
+                response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
+        else:
+            # No patch needed for this scenario
+            greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
+            response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
 
         # Assert: Check the result type and that the expected keywords are in the message
         assert isinstance(response, GreetingHttpResponse)
@@ -101,31 +89,40 @@ class TestSayHelloUltimateHttp:
             assert keyword in response.message, f"Expected '{keyword}' to be in greeting message"
 
     @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
-    def test_http_function_timebased_morning(self, mock_datetime, flask_app):
-        with flask_app.test_request_context("/?name=MorningUser", method="GET"):
+    def test_http_function_timebased_morning(self, mock_datetime, mock_injector, flask_app):
+        mock_injector.binder.bind(
+            SayHelloSettings,
+            SayHelloSettings(default_name="World", greeting_type=GreetingType.TIME_BASED, greeting_language=GreetingLanguage.EN),
+        )
 
+        with flask_app.test_request_context(
+            "/greet",
+            method="POST",
+            json={"first_name": "John", "last_name": "Doe"},
+        ):
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            greeting_request = GreetingHttpRequest(first_name="John", last_name="Doe")
-
-            response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
+            response: GreetingHttpResponse = say_hello_ultimate_http(request=request, injector=mock_injector)
 
         assert isinstance(response, GreetingHttpResponse)
         assert "John Doe" in response.message
         assert "Good morning" in response.message
 
-    def test_http_function_timebased_morning_v2(self, flask_app):
-        with flask_app.test_request_context("/?name=MorningUser", method="GET"):
+    def test_http_function_timebased_morning_v2(self, mock_injector):
+        mock_injector.binder.bind(
+            SayHelloSettings,
+            SayHelloSettings(default_name="World", greeting_type=GreetingType.TIME_BASED, greeting_language=GreetingLanguage.EN),
+        )
 
-            with patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime") as mock_datetime:
+        with patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime") as mock_datetime:
 
-                mock_now = datetime(2024, 12, 10, 8, 0, 0)
-                mock_datetime.datetime.now.return_value = mock_now
+            mock_now = datetime(2024, 12, 10, 8, 0, 0)
+            mock_datetime.datetime.now.return_value = mock_now
 
-                greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
+            greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
 
-                response: GreetingHttpResponse = say_hello_ultimate_http.__wrapped__(request=greeting_request)
+            response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
 
         assert isinstance(response, GreetingHttpResponse)
         assert "Alice Smith" in response.message

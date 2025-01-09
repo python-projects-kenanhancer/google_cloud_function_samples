@@ -10,6 +10,6 @@ __all__ = [
     "SayHelloSettingsModule",
     "FakeSayHelloSettingsModule",
     "SettingsModule",
-    "LoggingModule",
     "GreetingModule",
+    "LoggingModule",
 ]

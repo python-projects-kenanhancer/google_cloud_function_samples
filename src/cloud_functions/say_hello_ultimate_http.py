@@ -2,14 +2,29 @@ from injector import Injector
 
 from application import GreetingAppRequest, SayHelloUseCase
 from cloud_functions.dtos import GreetingHttpRequest, GreetingHttpResponse
-from infrastructure import LoggerStrategy, SayHelloSettings, Settings, build_di_container, inject_dependency, inject_typed_request
+from infrastructure import (
+    LoggerStrategy,
+    SayHelloSettings,
+    Settings,
+    container_builder_middleware,
+    inject_dependency_middleware,
+    logger_middleware,
+    pipeline,
+    time_middleware,
+    typed_request_middleware,
+)
 
 # Parameter Object Design Pattern
 # Result Object Design Pattern
 
 
-@inject_typed_request()
-@inject_dependency(build_di_container())
+@pipeline(
+    container_builder_middleware,
+    inject_dependency_middleware,
+    typed_request_middleware,
+    logger_middleware,
+    time_middleware,
+)
 def say_hello_ultimate_http(
     request: GreetingHttpRequest,
     say_hello_use_case: SayHelloUseCase,
