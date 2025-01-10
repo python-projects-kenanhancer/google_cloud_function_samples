@@ -1,3 +1,4 @@
+from flask import jsonify
 from pydantic import BaseModel, ConfigDict
 
 from . import Card
@@ -17,3 +18,7 @@ class ChatHttpResponse(BaseModel):
     def from_dict(cls, data: dict):
         # The typed decorator will call this to parse incoming JSON
         return cls.model_validate(data)
+
+    def __call__(self, environ, start_response):
+        """Make the class WSGI callable"""
+        return jsonify(self.to_dict())(environ, start_response)

@@ -4,12 +4,14 @@ from .log_class_middleware import LogMiddleware
 from .logger_middleware import logger_middleware
 from .time_class_middleware import TimeMiddleware
 from .time_middleware import time_middleware
+from .typed_cloud_event_middleware import typed_cloud_event_middleware
 from .typed_request_middleware import typed_request_middleware
 
 __all__ = [
     "logger_middleware",
     "time_middleware",
     "typed_request_middleware",
+    "typed_cloud_event_middleware",
     "inject_dependency_middleware",
     "container_builder_middleware",
     "TimeMiddleware",

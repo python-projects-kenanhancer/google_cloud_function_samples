@@ -1,12 +1,25 @@
-import functions_framework
 from flask import Request
 
 from application import GreetingAppRequest, SayHelloUseCase
-from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container, inject_dependency
+from infrastructure import (
+    LoggerStrategy,
+    SayHelloSettings,
+    container_builder_middleware,
+    inject_dependency_middleware,
+    logger_middleware,
+    pipeline,
+    time_middleware,
+    typed_request_middleware,
+)
 
 
-@functions_framework.http
-@inject_dependency(build_di_container())
+@pipeline(
+    container_builder_middleware,
+    inject_dependency_middleware,
+    typed_request_middleware,
+    logger_middleware,
+    time_middleware,
+)
 def say_hello_extended_http(
     request: Request, say_hello_settings: SayHelloSettings, say_hello_use_case: SayHelloUseCase, logger: LoggerStrategy
 ):

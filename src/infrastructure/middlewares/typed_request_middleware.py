@@ -35,26 +35,32 @@ def typed_request_middleware(context: Context, next: Next):
     if isinstance(maybe_request, annotated_type):
         return next()
 
-    # If it's a Flask Request, process it
-    if isinstance(maybe_request, Request):
-        flask_request: Request = maybe_request
-        # Process Flask request data
-        json_data = flask_request.get_json(silent=True) or {}
-        query_data = dict(flask_request.args)
-        header_data = {}  # or parse headers if needed
-        merged_data = {**json_data, **query_data, **header_data}
-
-        # Convert to typed object
-        if not hasattr(annotated_type, "from_dict"):
-            raise AttributeError(f"Type '{annotated_type.__name__}' does not have a 'from_dict' method.")
-        typed_obj = annotated_type.from_dict(merged_data)
-
-        # Replace first argument
-        context.args = (typed_obj,) + args[1:]
-
-    else:
+    # If it's not a Request type, raise error immediately
+    if not isinstance(maybe_request, Request):
         raise TypeError(
             f"Expected first argument to be either {annotated_type.__name__} " f"or Flask Request, but got {type(maybe_request)}"
         )
 
-    return next()
+    flask_request: Request = maybe_request
+    # Process Flask request data
+    json_data = flask_request.get_json(silent=True) or {}
+    query_data = dict(flask_request.args)
+    header_data = {}  # or parse headers if needed
+    merged_data = {**json_data, **query_data, **header_data}
+
+    # Convert to typed object
+    if not hasattr(annotated_type, "from_dict"):
+        raise AttributeError(f"Type '{annotated_type.__name__}' does not have a 'from_dict' method.")
+    typed_obj = annotated_type.from_dict(merged_data)
+
+    # Replace first argument
+    context.args = (typed_obj,) + args[1:]
+
+    result = next()
+
+    # If the result has a `.to_dict()`, convert to dict so Flask can return JSON
+    #    (Only if you want that automatically.)
+    # if hasattr(result, "to_dict") and callable(result.to_dict):
+    #     return result.to_dict()
+
+    return result

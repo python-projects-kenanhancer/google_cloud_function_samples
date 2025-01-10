@@ -13,9 +13,9 @@ class TestSayHelloAdvancedHttp:
         ],
     )
     def test_say_hello_advanced_http(self, first_name, last_name, expected_message):
-        request_obj = GreetingHttpRequest(first_name=first_name, last_name=last_name)
+        request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
 
-        response_obj: GreetingHttpResponse = say_hello_advanced_http(request_obj)
+        response: GreetingHttpResponse = say_hello_advanced_http(request)
 
-        assert isinstance(response_obj, GreetingHttpResponse)
-        assert response_obj.message == expected_message
+        assert isinstance(response, GreetingHttpResponse)
+        assert response.message == expected_message

@@ -95,12 +95,21 @@ class TestSayHelloExtendedHttp:
         assert expected_name in response
 
     @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
-    def test_http_function_timebased_morning(self, mock_datetime, flask_app):
+    def test_http_function_timebased_morning(self, mock_datetime, mock_injector, flask_app):
         with flask_app.test_request_context("/?name=MorningUser", method="GET"):
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            response: str = say_hello_extended_http.__wrapped__(request=request)
+            mock_injector.binder.bind(
+                SayHelloSettings,
+                SayHelloSettings(
+                    default_name="World!", greeting_type=GreetingType.TIME_BASED, greeting_language=GreetingLanguage.EN
+                ),
+            )
+
+            say_hello_settings = mock_injector.get(SayHelloSettings)
+
+            response: str = say_hello_extended_http(request, say_hello_settings)
 
         assert isinstance(response, str)
         assert "MorningUser" in response
@@ -112,7 +121,7 @@ class TestSayHelloExtendedHttp:
                 mock_now = datetime(2024, 12, 10, 8, 0, 0)
                 mock_datetime.datetime.now.return_value = mock_now
 
-                response: str = say_hello_extended_http.__wrapped__(request=request)
+                response: str = say_hello_extended_http(request=request)
 
         assert isinstance(response, str)
         assert "MorningUser" in response

@@ -1,18 +1,21 @@
 ### 1) Basic Pub/Sub Message Test
 POST http://localhost:8080
 Content-Type: application/json
-ce-id: basic-message-1234
-ce-source: //pubsub.googleapis.com/projects/YOUR_PROJECT/topics/YOUR_TOPIC
-ce-type: google.cloud.pubsub.topic.v1.messagePublished
-ce-specversion: 1.0
 
 {
-  "message": {
-    "data": "SGVsbG8sIFB1Yl9TdWIK",
-    "messageId": "abc-123",
-    "attributes": {
-      "author": "John Doe",
-      "priority": "high"
+  "specversion": "1.0",
+  "id": "1234567890",
+  "source": "//pubsub.googleapis.com/projects/test-project/topics/test-topic",
+  "type": "google.cloud.pubsub.topic.v1.messagePublished",
+  "data": {
+    "message": {
+      "data": "SGVsbG8sIFB1Yl9TdWI=",
+      "messageId": "123456",
+      "publishTime": "2025-01-10T15:01:23.045Z",
+      "attributes": {
+        "key1": "value1",
+        "key2": "value2"
+      }
     }
   }
 }

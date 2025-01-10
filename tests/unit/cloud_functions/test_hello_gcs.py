@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from cloudevents.http import CloudEvent
 
-from cloud_functions import hello_gcs
+from cloud_functions import hello_basic_gcs
 from infrastructure import LoggerStrategy, build_di_container
 
 
@@ -28,7 +28,7 @@ class TestHelloGcs:
 
     def test_hello_gcs_prints_details(self, mock_injector, mock_logger_strategy):
         """
-        Ensures that hello_gcs prints the correct details when
+        Ensures that hello_basic_gcs prints the correct details when
         triggered by a CloudEvent with relevant data.
         """
         # Define CloudEvent attributes
@@ -52,7 +52,7 @@ class TestHelloGcs:
         event = CloudEvent(attributes, data)
 
         # Invoke the function
-        hello_gcs.__wrapped__(cloud_event=event, injector=mock_injector)
+        hello_basic_gcs.__wrapped__(cloud_event=event, injector=mock_injector)
 
         # Assert: Verify the calls on the mock logger
         mock_logger_strategy.info.assert_any_call(f"Event ID: {attributes["id"]}")

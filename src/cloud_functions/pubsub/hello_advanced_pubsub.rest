@@ -1,0 +1,21 @@
+### 1) Basic Pub/Sub Message Test
+POST http://localhost:8080
+Content-Type: application/json
+
+{
+  "specversion": "1.0",
+  "id": "1234567890",
+  "source": "//pubsub.googleapis.com/projects/test-project/topics/test-topic",
+  "type": "google.cloud.pubsub.topic.v1.messagePublished",
+  "data": {
+    "message": {
+      "data": "eyJ1c2VyX2lkIjogInVzZXIxMjMiLCAiYWN0aW9uIjogImxvZ2luIiwgInRpbWVzdGFtcCI6ICIyMDI0LTAxLTEwVDEyOjM0OjU2WiJ9",
+      "messageId": "123456",
+      "publishTime": "2025-01-10T15:01:23.045Z",
+      "attributes": {
+        "author": "John Doe",
+        "priority": "high"
+      }
+    }
+  }
+}

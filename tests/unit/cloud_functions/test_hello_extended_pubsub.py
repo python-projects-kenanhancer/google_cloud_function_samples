@@ -49,7 +49,7 @@ class TestHelloPubsub:
         }
         event = CloudEvent(attributes, data)
 
-        hello_extended_pubsub.__wrapped__(cloud_event=event, injector=mock_injector)
+        hello_extended_pubsub(cloud_event=event, injector=mock_injector)
 
         # Assert: Verify the calls on the mock logger
         mock_logger_strategy.info.assert_any_call("CloudEvent ID: %s", attributes["id"])

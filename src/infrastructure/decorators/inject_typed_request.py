@@ -3,6 +3,7 @@ import inspect
 from typing import Any, Callable
 
 from flask import Request
+from pydantic import BaseModel
 
 
 def inject_typed_request():
@@ -98,14 +99,16 @@ def inject_typed_request():
             # For example, if query_data should override JSON, do: {**json_data, **query_data}
             merged_data = {**json_data, **query_data, **header_data}
 
-            # 5. We assume the annotated_type has a `from_dict(...)` or similar constructor
-            #    Adjust this to match your typed model's constructor pattern (Pydantic, etc.)
-            if not hasattr(annotated_type, "from_dict"):
-                raise AttributeError(f"Type '{annotated_type.__name__}' does not have a 'from_dict' method.")
+            # 5. Check if annotated_type is a Pydantic model
+            if not isinstance(annotated_type, type) or not issubclass(annotated_type, BaseModel):
+                raise TypeError(
+                    f"Type '{annotated_type.__name__}' must be a Pydantic model (subclass of BaseModel). "
+                    f"Got {type(annotated_type).__name__} instead."
+                )
 
             # 6. Convert the JSON to a strongly typed model
             #    Using Pydantic's parse_obj or constructor
-            typed_obj = annotated_type.from_dict(merged_data)
+            typed_obj = annotated_type.model_validate(merged_data)
 
             # 7. Replace the first argument with the typed object
             new_args = (typed_obj,) + args[1:]
@@ -115,8 +118,8 @@ def inject_typed_request():
 
             # 9. If the result has a `.to_dict()`, convert to dict so Flask can return JSON
             #    (Optional step, depending on your return-type needs.)
-            if hasattr(result, "to_dict") and callable(result.to_dict):
-                return result.to_dict()
+            # if hasattr(result, "to_dict") and callable(result.to_dict):
+            #     return result.to_dict()
 
             return result
 

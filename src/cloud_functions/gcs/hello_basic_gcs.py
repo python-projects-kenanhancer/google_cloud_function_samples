@@ -8,7 +8,7 @@ from infrastructure import LoggerStrategy, build_di_container, inject_dependency
 # Triggered by a change in a storage bucket
 @functions_framework.cloud_event
 @inject_dependency(build_di_container())
-def hello_gcs(cloud_event: CloudEvent, injector: Injector):
+def hello_basic_gcs(cloud_event: CloudEvent, injector: Injector):
     logger = injector.get(LoggerStrategy)
 
     data = cloud_event.data
