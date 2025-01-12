@@ -56,9 +56,7 @@ PipelineItem = Union[
 ]
 
 
-def clean_kwargs_for_target(
-    func: TargetFunc, args: tuple, kwargs: dict[str, Any]
-) -> dict[str, Any]:
+def clean_kwargs_for_target(func: TargetFunc, args: tuple, kwargs: dict[str, Any]) -> dict[str, Any]:
     """
     Clean kwargs by removing values that are already provided in args
     to avoid "multiple values for argument" error
@@ -66,9 +64,7 @@ def clean_kwargs_for_target(
     sig = inspect.signature(func)
     param_names = set(sig.parameters.keys())
 
-    has_var_keyword = any(
-        p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
-    )
+    has_var_keyword = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
 
     # Get parameter names that are already filled by args
     bound_args = sig.bind_partial(*args)
@@ -76,20 +72,14 @@ def clean_kwargs_for_target(
 
     if not has_var_keyword:
         # Filter kwargs: must be in param_names AND not already in args
-        return {
-            k: v for k, v in kwargs.items() if k in param_names and k not in args_params
-        }
+        return {k: v for k, v in kwargs.items() if k in param_names and k not in args_params}
 
     # If function has **kwargs, only filter out args params
     return {k: v for k, v in kwargs.items() if k not in args_params}
 
 
 def is_middleware_func(item: Any) -> bool:
-    return (
-        callable(item)
-        and not inspect.isclass(item)
-        and len(inspect.signature(item).parameters) == 2  # context, next
-    )
+    return callable(item) and not inspect.isclass(item) and len(inspect.signature(item).parameters) == 2  # context, next
 
 
 def is_middleware_class(item: Any) -> TypeGuard[MiddlewareProtocol]:
@@ -121,9 +111,7 @@ def create_middleware_from_class(cls: Any) -> MiddlewareFunc:
     def resolver(context: Context, next: Next) -> Any:
         injector = context.kwargs.get("injector")
         if not injector:
-            raise RuntimeError(
-                f"No injector found in context.kwargs while trying to resolve {cls}."
-            )
+            raise RuntimeError(f"No injector found in context.kwargs while trying to resolve {cls}.")
         instance = injector.get(cls)
         return instance(context, next)
 
@@ -153,9 +141,7 @@ def create_function_pipeline(
 
             def dispatch(index: int) -> Any:
                 if index == len(middlewares):
-                    clean_kwargs = clean_kwargs_for_target(
-                        ctx.func, ctx.args, ctx.kwargs
-                    )
+                    clean_kwargs = clean_kwargs_for_target(ctx.func, ctx.args, ctx.kwargs)
                     return ctx.func(*ctx.args, **clean_kwargs)
                 return middlewares[index](ctx, lambda: dispatch(index + 1))
 
@@ -172,11 +158,7 @@ def create_class_pipeline(middlewares: list[MiddlewareFunc]) -> Callable[[type],
     """Create a pipeline for classes."""
 
     def class_decorator(cls: type) -> type:
-        method_names = [
-            name
-            for name, value in cls.__dict__.items()
-            if callable(value) and not name.startswith("__")
-        ]
+        method_names = [name for name, value in cls.__dict__.items() if callable(value) and not name.startswith("__")]
 
         for name in method_names:
             original_method = getattr(cls, name)

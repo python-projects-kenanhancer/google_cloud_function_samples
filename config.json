@@ -25,6 +25,15 @@
     "inttest_dset": "integration_test",
     "no_proxy": "*"
   },
+  "datadog": {
+    "environment": "dev",
+    "log_level": "info",
+    "logger_name": "info",
+    "project_id": "nexum-dev-364711",
+    "repo_name": "cdt_dags",
+    "service": "ovo_cdt_to_nexum",
+    "team": "cdt"
+  },
   "feature_flags": {
     "circuit_breaker_checks_subset_config": {
       "first_name": "Ricardo"
@@ -37,15 +46,6 @@
     "postgres_db": "airflow",
     "postgres_password": "airflow",
     "postgres_user": "airflow"
-  },
-  "datadog": {
-    "service": "ovo_cdt_to_nexum",
-    "environment": "dev",
-    "project_id": "nexum-dev-364711",
-    "repo_name": "cdt_dags",
-    "team": "cdt",
-    "log_level": "info",
-    "logger_name": "info"
   },
   "project_env": "dev"
 }

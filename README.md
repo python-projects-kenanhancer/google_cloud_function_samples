@@ -4,19 +4,20 @@ Google Cloud Function Samples is a collection of sample Google Cloud Functions s
 
 ## Key Features
 
-  1. Multiple Trigger Types
+1. Multiple Trigger Types
 
-     - HTTP Trigger – Demonstrates how to handle HTTP requests and responses.
-     - Storage Trigger – Respond to events from Google Cloud Storage, such as file creation or deletion.
-     - Pub/Sub Trigger – Process messages from Google Pub/Sub topics.
+   - HTTP Trigger – Demonstrates how to handle HTTP requests and responses.
+   - Storage Trigger – Respond to events from Google Cloud Storage, such as file creation or deletion.
+   - Pub/Sub Trigger – Process messages from Google Pub/Sub topics.
 
-  2. Centralized Configuration Management
-     - Load and inject environment variables from a local `.env`, `config.json` or `config.yaml` file.
-     - Load and inject environment variables from `Google Storage`, `Google Secret Manager` so that settings of application will be centralised
+2. Centralized Configuration Management
 
-  3. Dependency Management and Testing
-     - Poetry is used for efficient dependency management and packaging.
-     - Pytest provides a simple and flexible framework for writing and running tests, ensuring reliability and consistency of your Cloud Functions.
+   - Load and inject environment variables from a local `.env`, `config.json` or `config.yaml` file.
+   - Load and inject environment variables from `Google Storage`, `Google Secret Manager` so that settings of application will be centralised
+
+3. Dependency Management and Testing
+   - UV is used for efficient dependency management and packaging.
+   - Pytest provides a simple and flexible framework for writing and running tests, ensuring reliability and consistency of your Cloud Functions.
 
 > Note: This project applies only to Cloud Run functions—formerly Cloud Functions (2nd gen). Find more details in [Cloud Run Function](https://cloud.google.com/functions/docs/create-deploy-http-python)
 
@@ -110,23 +111,23 @@ brew install asdf
   python --version
   ```
 
-### poetry
+### UV
 
-- Poetry is a dependency and environment management tool for Python, designed to simplify the process of managing Python packages and virtual environments.
+- UV is a fast Python package installer and resolver, written in Rust. Install it using pip:
 
   ```bash
-  curl -sSL https://install.python-poetry.org | python3 -
+  curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 
 ### Google Cloud CLI
 
 - Install Google Cloud CLI running the following commands. Find more details in [gcloud CLI](https://cloud.google.com/sdk/docs/install)
-  
+
   ```bash
   curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-darwin-arm.tar.gz -o GCLOUDCLI.tar.gz
-  
+
   tar -xvf GCLOUDCLI.tar.gz
-  
+
   ./google-cloud-sdk/install.sh
   ```
 
@@ -143,23 +144,12 @@ brew install asdf
   ```
 
 - Update and install gcloud components with the following command:
-  
+
   ```bash
   gcloud components update
   ```
 
 ### Automating VS Code Extensions Setup
-
-- To ensure all team members use the same set of VS Code extensions, you can automate the generation of the .vscode/extensions.json file. This file contains recommendations for the extensions required for this project.
-
-  Generate the extensions.json File
-  Run the following command in the project directory:
-
-  ```bash
-  code --list-extensions | jq -R . | jq -s '{ "recommendations": . }' > .vscode/extensions.json
-  ```
-
-  This will create or overwrite the .vscode/extensions.json file with a list of currently installed extensions, formatted for VS Code's recommendations.
 
 - Install VSCode Default Extensions programatically.
 
@@ -176,23 +166,43 @@ brew install asdf
    cd google_cloud_function_samples
    ```
 
+1. Create and Activate Virtual Environment:
+
+   ```bash
+   uv venv
+   source .venv/bin/activate  # For Linux/Mac
+   ```
+
 1. Install Dependencies:
 
    ```bash
-   poetry install
-   poetry run pre-commit install --overwrite
+   # Install all dependencies including dev dependencies
+   uv sync
+
+   # Install/Reinstall pre-commit hooks
+   rm -rf .git/hooks/*  # Remove all git hooks
+   uv run pre-commit clean # Clean any existing pre-commit
+   uv run pre-commit uninstall # Uninstall any remaining hooks
+   uv run pre-commit install --overwrite  # Install hooks fresh
    ```
 
    or
 
    ```bash
-   poetry run setup
+   uv run setup
    ```
 
 1. Run Tests: Run the tests using pytest:
 
    ```bash
-   poetry run pytest
+   uv run pytest
+   ```
+
+1. Sync after team members update dependencies
+
+   ```bash
+   git pull # Get latest changes
+   uv sync # Update environment from uv.lock
    ```
 
 ## Running Pre-commit hooks
@@ -200,19 +210,20 @@ brew install asdf
 - This command executes all the pre-commit hooks defined in your .pre-commit-config.yaml file on all files in your repository, regardless of whether they have been modified or staged for commit. It ensures that your entire codebase adheres to the standards and checks specified by your pre-commit hooks.
 
   ```bash
-  poetry run pre-commit run --all-files
+  # Run all pre-commit hooks
+  uv run pre-commit run --all-files
 
-  or
+  # OR
 
-  poetry run pre-commit run --all-files --verbose
+  # Run with verbose output
+  uv run pre-commit run --all-files --verbose
   ```
 
 - Additional Command Options
 
   ```bash
-  poetry run pre-commit run black --all-files
-
-  poetry run pre-commit run pretty-format-json --all-files
-
-  poetry run pre-commit run pretty-format-json --files config.json
+  # Run specific hooks
+  uv run pre-commit run black --all-files
+  uv run pre-commit run pretty-format-json --all-files
+  uv run pre-commit run pretty-format-json --files config.json
   ```

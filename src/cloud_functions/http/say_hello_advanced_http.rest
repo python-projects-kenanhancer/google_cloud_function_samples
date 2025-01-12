@@ -1,4 +1,4 @@
-### 
+###
 # Test 1: Send a POST request with a JSON payload
 POST http://localhost:8080/say_hello_advanced_http
 Content-Type: application/json
