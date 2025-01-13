@@ -2,6 +2,7 @@ from application import GreetingAppRequest, SayHelloUseCase
 from cloud_functions.dtos import GreetingMessage
 from infrastructure import (
     GcpPubSubCloudEvent,
+    GcpPubSubEventData,
     LoggerStrategy,
     container_builder_middleware,
     inject_dependency_middleware,
@@ -10,7 +11,6 @@ from infrastructure import (
     time_middleware,
     typed_cloud_event_middleware,
 )
-from infrastructure.models.gcp_pub_sub.gcp_pub_sub_event_data import GcpPubSubEventData
 
 
 # Triggered by a change in a storage bucket
