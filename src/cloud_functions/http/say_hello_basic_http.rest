@@ -1,4 +1,0 @@
-###
-# Test 1: Send a GET request with a query parameter
-GET http://localhost:8080/say_hello_basic_http
-Content-Type: application/json

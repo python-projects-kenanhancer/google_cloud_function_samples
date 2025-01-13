@@ -1,24 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from . import (
-    AirflowCoreSettings,
-    AirflowInitSettings,
-    BackendDBSettings,
-    CdtToNexumSettings,
-    DatadogSettings,
-    Environment,
-    FeatureFlagsSettings,
-    MetaDatabaseSettings,
-)
+from domain import GreetingLanguage, GreetingType
+
+from . import DatadogSettings, Environment
 
 
 class Settings(BaseModel):
-    project_env: Environment
+    project_env: Environment = Environment.DEV
 
-    feature_flags: FeatureFlagsSettings
-    meta_database: MetaDatabaseSettings
-    backend_db: BackendDBSettings
-    airflow_init: AirflowInitSettings
-    airflow_core: AirflowCoreSettings
-    cdt_to_nexum: CdtToNexumSettings
+    default_name: str
+    greeting_type: GreetingType
+    greeting_language: GreetingLanguage
     datadog: DatadogSettings
+
+    model_config = ConfigDict(from_attributes=True)
+
+    def to_dict(self) -> dict:
+        # The typed decorator will call this to serialize the response
+        return self.model_dump()

@@ -7,7 +7,6 @@ from ..config_loaders.config_loader_args import (
 )
 from .greeting_module import GreetingModule
 from .logging_module import LoggingModule
-from .say_hello_settings_module import SayHelloSettingsModule
 from .settings_module import SettingsModule
 
 
@@ -17,13 +16,6 @@ def build_di_container(extra_modules: Optional[list[Module]] = None) -> Injector
         GreetingModule(),
         SettingsModule(
             config_loader_args=GcpStorageEnvConfigLoaderArgs(
-                bucket_name="app-config-boilerplate",
-                blob_name=".env",
-                project_id="nexum-dev-364711",
-            )
-        ),
-        SayHelloSettingsModule(
-            GcpStorageEnvConfigLoaderArgs(
                 bucket_name="app-config-boilerplate",
                 blob_name=".env.say_hello",
                 project_id="nexum-dev-364711",

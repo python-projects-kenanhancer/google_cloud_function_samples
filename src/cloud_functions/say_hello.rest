@@ -1,6 +1,6 @@
 ###
 # Test 1: Basic usage
-POST http://localhost:8080/say_hello_ultimate_http
+POST http://localhost:8080/say_hello
 Content-Type: application/json
 
 {
@@ -10,7 +10,7 @@ Content-Type: application/json
 
 ###
 # Test 2: Another name
-POST http://localhost:8080/say_hello_ultimate_http
+POST http://localhost:8080/say_hello
 Content-Type: application/json
 
 {
@@ -20,7 +20,7 @@ Content-Type: application/json
 
 ###
 # Test 3: Missing last_name (will likely raise a validation error if typed)
-POST http://localhost:8080/say_hello_ultimate_http
+POST http://localhost:8080/say_hello
 Content-Type: application/json
 
 {
@@ -30,7 +30,7 @@ Content-Type: application/json
 
 ###
 # Test 4:
-GET http://localhost:8080/say_hello_ultimate_http?last_name=Marley
+GET http://localhost:8080/say_hello?last_name=Marley
 Content-Type: application/json
 
 {

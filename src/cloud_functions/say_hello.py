@@ -1,11 +1,7 @@
-from injector import Injector
-
 from application import GreetingAppRequest, SayHelloUseCase
 from cloud_functions.dtos import GreetingHttpRequest, GreetingHttpResponse
 from infrastructure import (
     LoggerStrategy,
-    SayHelloSettings,
-    Settings,
     container_builder_middleware,
     inject_dependency_middleware,
     logger_middleware,
@@ -25,22 +21,11 @@ from infrastructure import (
     logger_middleware,
     time_middleware,
 )
-def say_hello_ultimate_http(
+def say_hello(
     request: GreetingHttpRequest,
     say_hello_use_case: SayHelloUseCase,
     logger: LoggerStrategy,
-    injector: Injector,
-    settings: Settings,
-    say_hello_settings: SayHelloSettings,
 ):
-
-    settings_v2 = injector.get(Settings)
-
-    say_hello_settings_v2 = injector.get(SayHelloSettings)
-
-    print(settings == settings_v2)
-
-    print(say_hello_settings == say_hello_settings_v2)
 
     request_app = GreetingAppRequest.model_validate(request.to_dict())
 

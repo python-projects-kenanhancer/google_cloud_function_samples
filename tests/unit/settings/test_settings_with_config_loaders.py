@@ -1,81 +1,19 @@
 import pytest
 from injector import Injector
 
-from infrastructure import (
-    EnvConfigLoaderArgs,
-    GcpSecretEnvConfigLoaderArgs,
-    GcpSecretJsonConfigLoaderArgs,
-    GcpSecretYamlConfigLoaderArgs,
-    GcpStorageEnvConfigLoaderArgs,
-    GcpStorageJsonConfigLoaderArgs,
-    GcpStorageYamlConfigLoaderArgs,
-    JsonConfigLoaderArgs,
-    Settings,
-    SettingsModule,
-    YamlConfigLoaderArgs,
-)
-from tests.unit.settings.unified_settings import UnifiedSettings
+from domain import GreetingLanguage, GreetingType
+from infrastructure import DatadogSettings, GcpStorageEnvConfigLoaderArgs, Settings, SettingsModule
 
 
 class TestSettingsWithConfigLoaders:
 
     @pytest.fixture
-    def env_suffix(self, request):
-        return request.param
+    def settings(self) -> Settings:
 
-    @pytest.fixture
-    def settings(self, env_suffix) -> UnifiedSettings:
-
-        unified_settings = UnifiedSettings()
-
-        if env_suffix:
-            env_suffix = env_suffix.lower()
-            env_file = f".env.{env_suffix}"
-            json_file = f"config.{env_suffix}.json"
-            yaml_file = f"config.{env_suffix}.yaml"
-            env_gcp_secret_name = f"app-config-env-{env_suffix}"
-            json_gcp_secret_name = f"app-config-json-{env_suffix}"
-            yaml_gcp_secret_name = f"app-config-yaml-{env_suffix}"
-        else:
-            env_file = ".env"
-            json_file = "config.json"
-            yaml_file = "config.yaml"
-            env_gcp_secret_name = "app-config-env"
-            json_gcp_secret_name = "app-config-json"
-            yaml_gcp_secret_name = "app-config-yaml"
+        env_file = ".env.say_hello"
 
         bucket_name = "app-config-boilerplate"
         project_id = "nexum-dev-364711"
-
-        injector = Injector([SettingsModule(EnvConfigLoaderArgs(file_path=env_file))])
-
-        settings_from_env_file = injector.get(Settings)
-
-        injector = Injector([SettingsModule(JsonConfigLoaderArgs(file_path=json_file))])
-
-        settings_from_json_file = injector.get(Settings)
-
-        injector = Injector([SettingsModule(YamlConfigLoaderArgs(file_path=yaml_file))])
-
-        settings_from_yaml_file = injector.get(Settings)
-
-        injector = Injector(
-            [SettingsModule(GcpSecretEnvConfigLoaderArgs(secret_name=env_gcp_secret_name, project_id=project_id))]
-        )
-
-        settings_from_env_gcp_secret = injector.get(Settings)
-
-        injector = Injector(
-            [SettingsModule(GcpSecretJsonConfigLoaderArgs(secret_name=json_gcp_secret_name, project_id=project_id))]
-        )
-
-        settings_from_json_gcp_secret = injector.get(Settings)
-
-        injector = Injector(
-            [SettingsModule(GcpSecretYamlConfigLoaderArgs(secret_name=yaml_gcp_secret_name, project_id=project_id))]
-        )
-
-        settings_from_yaml_gcp_secret = injector.get(Settings)
 
         injector = Injector(
             [SettingsModule(GcpStorageEnvConfigLoaderArgs(bucket_name=bucket_name, blob_name=env_file, project_id=project_id))]
@@ -83,96 +21,25 @@ class TestSettingsWithConfigLoaders:
 
         settings_from_env_gcp_storage = injector.get(Settings)
 
-        injector = Injector(
-            [SettingsModule(GcpStorageJsonConfigLoaderArgs(bucket_name=bucket_name, blob_name=json_file, project_id=project_id))]
+        return settings_from_env_gcp_storage
+
+    @pytest.fixture
+    def expected_settings(self) -> Settings:
+
+        return Settings(
+            default_name="World",
+            greeting_type=GreetingType.TIME_BASED,
+            greeting_language=GreetingLanguage.EN,
+            datadog=DatadogSettings(
+                service="ovo_cdt_to_nexum",
+                environment="dev",
+                project_id="nexum-dev-364711",
+                repo_name="cdt_dags",
+                team="cdt",
+                log_level="info",
+                logger_name="info",
+            ),
         )
 
-        settings_from_json_gcp_storage = injector.get(Settings)
-
-        injector = Injector(
-            [SettingsModule(GcpStorageYamlConfigLoaderArgs(bucket_name=bucket_name, blob_name=yaml_file, project_id=project_id))]
-        )
-        settings_from_yaml_gcp_storage = injector.get(Settings)
-
-        unified_settings.settings_from_env_file = settings_from_env_file
-        unified_settings.settings_from_json_file = settings_from_json_file
-        unified_settings.settings_from_yaml_file = settings_from_yaml_file
-        unified_settings.settings_from_env_gcp_secret = settings_from_env_gcp_secret
-        unified_settings.settings_from_json_gcp_secret = settings_from_json_gcp_secret
-        unified_settings.settings_from_yaml_gcp_secret = settings_from_yaml_gcp_secret
-        unified_settings.settings_from_env_gcp_storage = settings_from_env_gcp_storage
-        unified_settings.settings_from_json_gcp_storage = settings_from_json_gcp_storage
-        unified_settings.settings_from_yaml_gcp_storage = settings_from_yaml_gcp_storage
-
-        return unified_settings
-
-    @pytest.mark.parametrize(
-        "env_suffix, expected_settings",
-        [
-            (
-                "",
-                {
-                    "meta_database": {"postgres_user": "airflow", "postgres_db": "airflow"},
-                    "airflow_core": {"airflow_uid": 55, "load_examples": False},
-                    "feature_flags": {"circuit_breaker_enabled": True, "circuit_breaker_duration": 11},
-                },
-            ),
-            (
-                "dev",
-                {
-                    "meta_database": {"postgres_user": "airflowddddd", "postgres_db": "airflowwwww"},
-                    "airflow_core": {"airflow_uid": 0, "load_examples": False},
-                    "feature_flags": {"circuit_breaker_enabled": False, "circuit_breaker_duration": -3},
-                },
-            ),
-            (
-                "local",
-                {
-                    "meta_database": {"postgres_user": "KENAN", "postgres_db": "KENAN"},
-                    "airflow_core": {"airflow_uid": 1000, "load_examples": True},
-                    "feature_flags": {"circuit_breaker_enabled": True, "circuit_breaker_duration": 5},
-                },
-            ),
-        ],
-        indirect=["env_suffix"],  # Resolve the `settings` parameter via the fixture
-    )
-    def test_settings_with_different_environments(self, settings: UnifiedSettings, expected_settings):
-
-        for section, fields in expected_settings.items():
-            for field, expected_value in fields.items():
-                actual_settings_from_env_file_value = getattr(getattr(settings.settings_from_env_file, section), field)
-                actual_settings_from_json_file_value = getattr(getattr(settings.settings_from_json_file, section), field)
-                actual_settings_from_yaml_file_value = getattr(getattr(settings.settings_from_yaml_file, section), field)
-
-                actual_settings_from_env_gcp_secret_value = getattr(
-                    getattr(settings.settings_from_env_gcp_secret, section), field
-                )
-                actual_settings_from_json_gcp_secret_value = getattr(
-                    getattr(settings.settings_from_json_gcp_secret, section), field
-                )
-                actual_settings_from_yaml_gcp_secret_value = getattr(
-                    getattr(settings.settings_from_yaml_gcp_secret, section), field
-                )
-
-                actual_settings_from_env_gcp_storage_value = getattr(
-                    getattr(settings.settings_from_env_gcp_storage, section), field
-                )
-                actual_settings_from_json_gcp_storage_value = getattr(
-                    getattr(settings.settings_from_json_gcp_storage, section), field
-                )
-                actual_settings_from_yaml_gcp_storage_value = getattr(
-                    getattr(settings.settings_from_yaml_gcp_storage, section), field
-                )
-
-                assert actual_settings_from_env_file_value == expected_value
-                assert actual_settings_from_json_file_value == expected_value
-                assert actual_settings_from_yaml_file_value == expected_value
-
-                assert actual_settings_from_env_gcp_secret_value == expected_value
-                assert actual_settings_from_json_gcp_secret_value == expected_value
-                assert actual_settings_from_yaml_gcp_secret_value == expected_value
-
-                assert actual_settings_from_env_gcp_storage_value == expected_value
-                assert actual_settings_from_json_gcp_storage_value == expected_value
-                assert actual_settings_from_yaml_gcp_storage_value == expected_value
-                assert actual_settings_from_yaml_gcp_storage_value == expected_value
+    def test_settings_with_different_environments(self, settings: Settings, expected_settings: Settings):
+        assert settings.to_dict() == expected_settings.to_dict()

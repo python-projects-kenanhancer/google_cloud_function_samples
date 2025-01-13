@@ -4,9 +4,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask, request
 
-from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello_ultimate_http
+from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello
 from domain import GreetingLanguage, GreetingType
-from infrastructure import LoggerStrategy, SayHelloSettings, build_di_container
+from infrastructure import DatadogSettings, LoggerStrategy, Settings, build_di_container
+
+DEFAULT_DATADOG_SETTINGS = DatadogSettings(
+    service="ovo_cdt_to_nexum",
+    environment="dev",
+    project_id="nexum-dev-364711",
+    repo_name="cdt_dags",
+    team="cdt",
+    log_level="INFO",
+    logger_name="INFO",
+)
 
 
 class TestSayHelloUltimateHttp:
@@ -69,19 +79,24 @@ class TestSayHelloUltimateHttp:
     ):
 
         mock_injector.binder.bind(
-            SayHelloSettings,
-            SayHelloSettings(default_name="World", greeting_type=greeting_type, greeting_language=greeting_language),
+            Settings,
+            Settings(
+                default_name="World",
+                greeting_type=greeting_type,
+                greeting_language=greeting_language,
+                datadog=DEFAULT_DATADOG_SETTINGS,
+            ),
         )
 
         if datetime_patch:
             with patch(datetime_patch) as mock_datetime:
                 mock_datetime.datetime.now.return_value = mock_now
                 greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
+                response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
         else:
             # No patch needed for this scenario
             greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-            response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
+            response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
 
         # Assert: Check the result type and that the expected keywords are in the message
         assert isinstance(response, GreetingHttpResponse)
@@ -91,8 +106,13 @@ class TestSayHelloUltimateHttp:
     @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
     def test_http_function_timebased_morning(self, mock_datetime, mock_injector, flask_app):
         mock_injector.binder.bind(
-            SayHelloSettings,
-            SayHelloSettings(default_name="World", greeting_type=GreetingType.TIME_BASED, greeting_language=GreetingLanguage.EN),
+            Settings,
+            Settings(
+                default_name="World",
+                greeting_type=GreetingType.TIME_BASED,
+                greeting_language=GreetingLanguage.EN,
+                datadog=DEFAULT_DATADOG_SETTINGS,
+            ),
         )
 
         with flask_app.test_request_context(
@@ -103,7 +123,7 @@ class TestSayHelloUltimateHttp:
             mock_now = datetime(2024, 12, 10, 8, 0, 0)
             mock_datetime.datetime.now.return_value = mock_now
 
-            response: GreetingHttpResponse = say_hello_ultimate_http(request=request, injector=mock_injector)
+            response: GreetingHttpResponse = say_hello(request=request, injector=mock_injector)
 
         assert isinstance(response, GreetingHttpResponse)
         assert "John Doe" in response.message
@@ -111,8 +131,13 @@ class TestSayHelloUltimateHttp:
 
     def test_http_function_timebased_morning_v2(self, mock_injector):
         mock_injector.binder.bind(
-            SayHelloSettings,
-            SayHelloSettings(default_name="World", greeting_type=GreetingType.TIME_BASED, greeting_language=GreetingLanguage.EN),
+            Settings,
+            Settings(
+                default_name="World",
+                greeting_type=GreetingType.TIME_BASED,
+                greeting_language=GreetingLanguage.EN,
+                datadog=DEFAULT_DATADOG_SETTINGS,
+            ),
         )
 
         with patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime") as mock_datetime:
@@ -122,7 +147,7 @@ class TestSayHelloUltimateHttp:
 
             greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
 
-            response: GreetingHttpResponse = say_hello_ultimate_http(request=greeting_request, injector=mock_injector)
+            response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
 
         assert isinstance(response, GreetingHttpResponse)
         assert "Alice Smith" in response.message

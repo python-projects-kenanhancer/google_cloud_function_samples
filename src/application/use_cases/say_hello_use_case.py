@@ -7,7 +7,7 @@ from domain import (
     GreetingService,
     PersonName,
 )
-from infrastructure import SayHelloSettings
+from infrastructure import Settings
 
 # Application-layer DTOs
 from ..dtos import GreetingAppRequest, GreetingAppResponse
@@ -28,7 +28,7 @@ class SayHelloUseCase:
     """
 
     @inject
-    def __init__(self, say_hello_settings: SayHelloSettings, greeting_service: GreetingService):
+    def __init__(self, say_hello_settings: Settings, greeting_service: GreetingService):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.say_hello_settings = say_hello_settings
         self.greeting_service = greeting_service
