@@ -1,29 +1,14 @@
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+import base64
+from unittest.mock import MagicMock
 
 import pytest
-from flask import Flask, request
+from cloudevents.http import CloudEvent
 
-from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello
-from domain import GreetingLanguage, GreetingType
-from infrastructure import DatadogSettings, LoggerStrategy, Settings, build_di_container
-
-DEFAULT_DATADOG_SETTINGS = DatadogSettings(
-    service="ovo_cdt_to_nexum",
-    environment="dev",
-    project_id="nexum-dev-364711",
-    repo_name="cdt_dags",
-    team="cdt",
-    log_level="INFO",
-    logger_name="INFO",
-)
+from cloud_functions import GreetingMessage, say_hello
+from infrastructure import LoggerStrategy, build_di_container
 
 
-class TestSayHelloUltimateHttp:
-    @pytest.fixture
-    def flask_app(self):
-        return Flask(__name__)
-
+class TestSayHelloPubsub:
     @pytest.fixture
     def mock_logger_strategy(self):
         """
@@ -43,112 +28,34 @@ class TestSayHelloUltimateHttp:
         return injector
 
     @pytest.mark.parametrize(
-        "greeting_type, greeting_language, first_name, last_name, mock_now, datetime_patch, expected_keywords",
+        "base64_input, expected_message",
         [
-            (GreetingType.BASIC, GreetingLanguage.EN, "John", "Doe", None, None, ["Hello", "John Doe"]),
             (
-                GreetingType.HOLIDAY,
-                GreetingLanguage.EN,
-                "Bob",
-                "Marley",
-                datetime(2024, 12, 10, 8, 0, 0),
-                "domain.greeting.greeting_strategies.holiday_greeting_strategy.datetime",
-                ["Happy Holidays", "Bob Marley"],
+                base64.b64encode(GreetingMessage(first_name="Alice", last_name="Wonderland").model_dump_json().encode()),
+                GreetingMessage(first_name="Alice", last_name="Wonderland"),
             ),
-            (
-                GreetingType.TIME_BASED,
-                GreetingLanguage.EN,
-                "Bob",
-                "Marley",
-                datetime(2024, 12, 10, 14, 0, 0),
-                "domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime",
-                ["Good afternoon", "Bob Marley"],
-            ),
+            # (b"", "No message received"),  # Test empty data
         ],
     )
-    def test_say_hello_ultimate_http(
-        self,
-        mock_injector,
-        greeting_type,
-        greeting_language,
-        first_name,
-        last_name,
-        mock_now,
-        datetime_patch,
-        expected_keywords,
-    ):
+    def test_hello_pubsub(self, mock_injector, mock_logger_strategy, base64_input, expected_message):
+        # Arrange: Create CloudEvent attributes and data
+        attributes = {
+            "id": "test-id-1234",
+            "source": "//pubsub.googleapis.com/projects/YOUR_PROJECT/topics/test-topic",
+            "specversion": "1.0",
+            "type": "google.cloud.pubsub.topic.v1.messagePublished",
+        }
+        data = {
+            "message": {
+                "data": base64_input.decode(),
+            }
+        }
+        event = CloudEvent(attributes, data)
 
-        mock_injector.binder.bind(
-            Settings,
-            Settings(
-                default_name="World",
-                greeting_type=greeting_type,
-                greeting_language=greeting_language,
-                datadog=DEFAULT_DATADOG_SETTINGS,
-            ),
-        )
+        say_hello(cloud_event=event, injector=mock_injector)
 
-        if datetime_patch:
-            with patch(datetime_patch) as mock_datetime:
-                mock_datetime.datetime.now.return_value = mock_now
-                greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-                response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
-        else:
-            # No patch needed for this scenario
-            greeting_request = GreetingHttpRequest(first_name=first_name, last_name=last_name)
-            response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
-
-        # Assert: Check the result type and that the expected keywords are in the message
-        assert isinstance(response, GreetingHttpResponse)
-        for keyword in expected_keywords:
-            assert keyword in response.message, f"Expected '{keyword}' to be in greeting message"
-
-    @patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime")
-    def test_http_function_timebased_morning(self, mock_datetime, mock_injector, flask_app):
-        mock_injector.binder.bind(
-            Settings,
-            Settings(
-                default_name="World",
-                greeting_type=GreetingType.TIME_BASED,
-                greeting_language=GreetingLanguage.EN,
-                datadog=DEFAULT_DATADOG_SETTINGS,
-            ),
-        )
-
-        with flask_app.test_request_context(
-            "/greet",
-            method="POST",
-            json={"first_name": "John", "last_name": "Doe"},
-        ):
-            mock_now = datetime(2024, 12, 10, 8, 0, 0)
-            mock_datetime.datetime.now.return_value = mock_now
-
-            response: GreetingHttpResponse = say_hello(request=request, injector=mock_injector)
-
-        assert isinstance(response, GreetingHttpResponse)
-        assert "John Doe" in response.message
-        assert "Good morning" in response.message
-
-    def test_http_function_timebased_morning_v2(self, mock_injector):
-        mock_injector.binder.bind(
-            Settings,
-            Settings(
-                default_name="World",
-                greeting_type=GreetingType.TIME_BASED,
-                greeting_language=GreetingLanguage.EN,
-                datadog=DEFAULT_DATADOG_SETTINGS,
-            ),
-        )
-
-        with patch("domain.greeting.greeting_strategies.time_based_greeting_strategy.datetime") as mock_datetime:
-
-            mock_now = datetime(2024, 12, 10, 8, 0, 0)
-            mock_datetime.datetime.now.return_value = mock_now
-
-            greeting_request = GreetingHttpRequest(first_name="Alice", last_name="Smith")
-
-            response: GreetingHttpResponse = say_hello(request=greeting_request, injector=mock_injector)
-
-        assert isinstance(response, GreetingHttpResponse)
-        assert "Alice Smith" in response.message
-        assert "Good morning" in response.message
+        # Assert: Verify the calls on the mock logger
+        mock_logger_strategy.info.assert_any_call("CloudEvent ID: %s", attributes["id"])
+        mock_logger_strategy.info.assert_any_call("CloudEvent Source: %s", attributes["source"])
+        mock_logger_strategy.info.assert_any_call("Pub/Sub Message: %s", expected_message.model_dump_json())
+        mock_logger_strategy.info.assert_any_call("Pub/Sub Message: %s", expected_message.model_dump_json())
