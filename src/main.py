@@ -6,7 +6,8 @@ from infrastructure import (
     pipeline,
     time_middleware,
 )
-from interfaces import GreetingCliArgs, GreetingCommand
+from interfaces.cli.commands import GreetingCommand
+from interfaces.dtos import GreetingCliArgs
 
 # Parameter Object Design Pattern
 # Result Object Design Pattern
