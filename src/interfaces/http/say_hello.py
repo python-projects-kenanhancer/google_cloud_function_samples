@@ -1,5 +1,4 @@
 from application import GreetingAppRequest, SayHelloUseCase
-from cloud_functions.dtos import GreetingHttpRequest, GreetingHttpResponse
 from infrastructure import (
     LoggerStrategy,
     container_builder_middleware,
@@ -9,6 +8,7 @@ from infrastructure import (
     time_middleware,
     typed_request_middleware,
 )
+from interfaces.dtos import GreetingHttpRequest, GreetingHttpResponse
 
 # Parameter Object Design Pattern
 # Result Object Design Pattern

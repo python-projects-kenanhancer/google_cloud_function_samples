@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask, request
 
-from cloud_functions import GreetingHttpRequest, GreetingHttpResponse, say_hello
 from domain import GreetingLanguage, GreetingType
 from infrastructure import DatadogSettings, LoggerStrategy, Settings, build_di_container
+from interfaces import GreetingHttpRequest, GreetingHttpResponse, say_hello
 
 DEFAULT_DATADOG_SETTINGS = DatadogSettings(
     service="ovo_cdt_to_nexum",
