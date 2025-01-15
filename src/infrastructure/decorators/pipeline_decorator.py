@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
+    Concatenate,
+    ParamSpec,
     Protocol,
     TypeGuard,
     TypeVar,
@@ -22,7 +24,7 @@ class Context:
 
 
 T = TypeVar("T")
-R = TypeVar("R")
+P = ParamSpec("P")
 
 
 # Basic types
@@ -32,7 +34,7 @@ TargetFunc = Callable[..., Any]
 
 @runtime_checkable
 class MiddlewareProtocol(Protocol):
-    def __call__(self, context: Context, next: Next) -> Any: ...
+    def __call__(self, context: Context, next: Next, **kwargs: Any) -> Any: ...
 
 
 @runtime_checkable
@@ -44,7 +46,7 @@ class PipelineFunction(Protocol):
 
 # Middleware types
 MiddlewareClass = type[MiddlewareProtocol]
-MiddlewareFunc = Callable[[Context, Next], Any]
+MiddlewareFunc = Callable[Concatenate[Context, Next, P], Any]
 PipelineDecorator = Callable[[TargetFunc], PipelineFunction]
 
 # Combined type for all valid pipeline items
@@ -79,7 +81,7 @@ def clean_kwargs_for_target(func: TargetFunc, args: tuple, kwargs: dict[str, Any
 
 
 def is_middleware_func(item: Any) -> bool:
-    return callable(item) and not inspect.isclass(item) and len(inspect.signature(item).parameters) == 2  # context, next
+    return callable(item) and not inspect.isclass(item) and len(inspect.signature(item).parameters) >= 2  # context, next
 
 
 def is_middleware_class(item: Any) -> TypeGuard[MiddlewareProtocol]:
@@ -95,7 +97,7 @@ def create_middleware_from_pipeline(
     pipeline_decorator: PipelineDecorator,
 ) -> MiddlewareFunc:
 
-    def middleware(context: Context, next: Next) -> Any:
+    def middleware(context: Context, next: Next, **kwargs: Any) -> Any:
         @pipeline_decorator
         @functools.wraps(context.func)
         def temp_func(*args: Any, **kwargs: Any) -> Any:
@@ -108,12 +110,53 @@ def create_middleware_from_pipeline(
 
 def create_middleware_from_class(cls: Any) -> MiddlewareFunc:
 
-    def resolver(context: Context, next: Next) -> Any:
+    def resolver(context: Context, next: Next, **kwargs: Any) -> Any:
         injector = context.kwargs.get("injector")
         if not injector:
             raise RuntimeError(f"No injector found in context.kwargs while trying to resolve {cls}.")
         instance = injector.get(cls)
-        return instance(context, next)
+        return instance(context, next, kwargs)
+
+    return resolver
+
+
+def create_middleware_with_injection(middleware_func: MiddlewareFunc) -> MiddlewareFunc:
+    @functools.wraps(middleware_func)  # Preserve original function metadata
+    def resolver(context: Context, next: Next, **kwargs: Any) -> Any:
+        # Get signature of the middleware function
+        middleware_sig = inspect.signature(middleware_func)
+
+        # The right-side dict takes precedence, so existing context kwargs take precedence
+        extended_kwargs = kwargs | context.kwargs
+
+        # Get injector from kwargs
+        injector_obj = extended_kwargs.get("injector", None)
+        if injector_obj is None:
+            raise RuntimeError(
+                f"Cannot inject dependencies for middleware '{middleware_func.__name__}' "
+                "because no injector is available. "
+                "Did you forget to add container_builder_middleware?"
+            )
+
+        # Prepare kwargs for middleware
+        middleware_kwargs = {}
+
+        # For each parameter in middleware function
+        for param_name, param in middleware_sig.parameters.items():
+            if param_name in ["context", "next"]:
+                continue
+
+            annotated_type = param.annotation
+            if annotated_type != inspect.Parameter.empty:
+                # Try to get from existing kwargs first
+                if param_name in kwargs:
+                    middleware_kwargs[param_name] = kwargs[param_name]
+                else:
+                    # If not in kwargs, try to inject
+                    dependency = injector_obj.get(annotated_type)
+                    middleware_kwargs[param_name] = dependency
+
+        return middleware_func(context, next, **middleware_kwargs)
 
     return resolver
 
@@ -122,7 +165,11 @@ def create_middleware(item: Any) -> MiddlewareFunc:
     if is_middleware_class(item):
         return create_middleware_from_class(item)
     elif is_middleware_func(item):
-        return item
+        # Skip wrapping if it's inject_dependency_middleware or container_builder_middleware
+        if item.__name__ in ["inject_dependency_middleware", "container_builder_middleware"]:
+            return item
+
+        return create_middleware_with_injection(item)
     elif is_pipeline_decorator(item):
         return create_middleware_from_pipeline(item)
     else:
@@ -143,7 +190,9 @@ def create_function_pipeline(
                 if index == len(middlewares):
                     clean_kwargs = clean_kwargs_for_target(ctx.func, ctx.args, ctx.kwargs)
                     return ctx.func(*ctx.args, **clean_kwargs)
-                return middlewares[index](ctx, lambda: dispatch(index + 1))
+
+                middleware_kwargs = clean_kwargs_for_target(middlewares[index], (), kwargs)
+                return middlewares[index](ctx, lambda: dispatch(index + 1), **middleware_kwargs)
 
             return dispatch(0)
 
